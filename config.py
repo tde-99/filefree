@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 #Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "7520786912:AAG1yGQ3fUYNSjJ-lJhzZEMLi_3wQ95SBqI")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "-1002568581749")
 
 #Your API ID from my.telegram.org
 APP_ID = int(os.environ.get("APP_ID", "9698652"))
@@ -22,12 +22,12 @@ MAX_ID = int(os.getenv("MAX_ID", 1500))
 VIDEOS_RANGE = list(range(MIN_ID, MAX_ID + 1))
 
 #OWNER ID
-OWNER_ID = int(os.environ.get("OWNER_ID", "7328629001"))
+OWNER_ID = int(os.environ.get("OWNER_ID", "7668133494"))
 
 #Port
 PORT = os.environ.get("PORT", "3435")
-DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://obito:umaid2008@cluster0.engyc.mongodb.net/?retryWrites=true&w=majority")
-DB_NAME = os.environ.get("DATABASE_NAME", "telesbs")
+DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://sara:sara>@cluster0.jucwr2m.mongodb.net/?appName=Cluster0")
+DB_NAME = os.environ.get("DATABASE_NAME", "7668133494")
 
 IS_VERIFY = os.environ.get("IS_VERIFY", "True")
 
@@ -77,13 +77,13 @@ SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/rohit_1888")
 #7 Days
 PRICE1 = os.environ.get("PRICE1", "0 rs")
 #1 Month
-PRICE2 = os.environ.get("PRICE2", "60 rs")
+PRICE2 = os.environ.get("PRICE2", "150 rs")
 #3 Month
-PRICE3 = os.environ.get("PRICE3", "150 rs")
+PRICE3 = os.environ.get("PRICE3", "280 rs")
 #6 Month
-PRICE4 = os.environ.get("PRICE4", "280 rs")
+PRICE4 = os.environ.get("PRICE4", "520 rs")
 #1 Year
-PRICE5 = os.environ.get("PRICE5", "550 rs")
+PRICE5 = os.environ.get("PRICE5", "999 rs")
 #===================(END)========================#
 
 #==========================(REFERRAL SYSTEM)====================#
