@@ -661,6 +661,11 @@ async def get_photo(client: Client, message: Message):
     # Spam protection check
     is_allowed, remaining_time = await db.check_spam_limit(user_id, "get_photo", max_requests=5, time_window=60)
     if not is_allowed:
+        # Schedule a notify when timeout is over (if not already scheduled)
+        try:
+            asyncio.create_task(schedule_spam_notification(client, user_id, "get_photo", remaining_time))
+        except Exception:
+            pass
         return await message.reply_text(
             f"⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ {remaining_time} sᴇᴄᴏɴᴅs ʙᴇғᴏʀᴇ ʀᴇǫᴜᴇsᴛɪɴɢ ᴀɢᴀɪɴ.",
             protect_content=False,
@@ -928,6 +933,10 @@ async def get_batch(client: Client, message: Message):
     # Spam protection check (stricter for batch)
     is_allowed, remaining_time = await db.check_spam_limit(user_id, "get_batch", max_requests=3, time_window=120)
     if not is_allowed:
+        try:
+            asyncio.create_task(schedule_spam_notification(client, user_id, "get_batch", remaining_time))
+        except Exception:
+            pass
         return await message.reply_text(
             f"⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ {remaining_time} sᴇᴄᴏɴᴅs ʙᴇғᴏʀᴇ ʀᴇǫᴜᴇsᴛɪɴɢ ᴀ ʙᴀᴛᴄʜ ᴀɢᴀɪɴ.",
             protect_content=False,
@@ -1249,6 +1258,10 @@ async def get_video(client: Client, message: Message):
     # Spam protection check
     is_allowed, remaining_time = await db.check_spam_limit(user_id, "get_video", max_requests=5, time_window=60)
     if not is_allowed:
+        try:
+            asyncio.create_task(schedule_spam_notification(client, user_id, "get_video", remaining_time))
+        except Exception:
+            pass
         return await message.reply_text(
             f"⏳ Pʟᴇᴀsᴇ ᴡᴀɪᴛ {remaining_time} sᴇᴄᴏɴᴅs ʙᴇғᴏʀᴇ ʀᴇǫᴜᴇsᴛɪɴɢ ᴀɢᴀɪɴ.",
             protect_content=False,
@@ -1515,6 +1528,36 @@ REPLY_ERROR = """<code>Use this command as a replay to any telegram message with
 # Global cache for chat data to reduce API calls
 chat_data_cache = {}
 
+async def schedule_spam_notification(client: Client, user_id: int, action_type: str, wait_time: int):
+    """Schedule a single notification to be sent to the user when rate-limit expires."""
+    try:
+        # Avoid duplicate scheduling
+        if await db.get_spam_notify_flag(user_id, action_type):
+            return
+        await db.set_spam_notify_flag(user_id, action_type)
+
+        async def _notify():
+            try:
+                await asyncio.sleep(wait_time)
+
+                # If the notify flag still present, notify user and clear
+                if await db.get_spam_notify_flag(user_id, action_type):
+                    # Reset spam protection to allow new requests
+                    await db.reset_spam_protection(user_id, action_type)
+                    try:
+                        await client.send_message(user_id, f"✅ You can now request {action_type.replace('_',' ')} again.")
+                    except Exception:
+                        pass
+                    await db.clear_spam_notify_flag(user_id, action_type)
+            except Exception as e:
+                logging.error(f"Error in spam-notify task: {e}")
+                await db.clear_spam_notify_flag(user_id, action_type)
+
+        asyncio.create_task(_notify())
+
+    except Exception as e:
+        logging.error(f"Failed to schedule spam notification: {e}")
+
 async def not_joined(client: Client, message: Message):
     temp = await message.reply(f"<b>??</b>")
 
@@ -1559,6 +1602,15 @@ async def not_joined(client: Client, message: Message):
                 except Exception as e:
                     print(f"Can't Export Channel Name and Link..., Please Check If the Bot is admin in the FORCE SUB CHANNELS:\nProvided Force sub Channel:- {chat_id}")
                     return await temp.edit(f"<b><i>! Eʀʀᴏʀ, Cᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ᴛᴏ sᴏʟᴠᴇ ᴛʜᴇ ɪssᴜᴇs @rohit_1888</i></b>\n<blockquote expandable><b>Rᴇᴀsᴏɴ:</b> {e}</blockquote>")
+
+        # Add a 'Get Batch' button so users can fetch a batch even if not yet joined
+        try:
+            buttons.append([
+                InlineKeyboardButton(text="Get Batch 📦", callback_data=f"get_again_get_batch_{user_id}"),
+                InlineKeyboardButton(text="Close ✖️", callback_data="close")
+            ])
+        except Exception:
+            pass
 
         await message.reply_photo(
             photo=FORCE_PIC,
