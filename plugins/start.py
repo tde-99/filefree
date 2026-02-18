@@ -28,7 +28,7 @@ from plugins.autoDelete import auto_del_notification, delete_message
 from bot import Bot
 from config import *
 from helper_func import *
-from database.database import db
+from database.database import db, collection
 from database.db_premium import *
 from plugins.FORMATS import *
 

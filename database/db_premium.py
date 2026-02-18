@@ -1,13 +1,8 @@
-import motor.motor_asyncio
-from config import DB_URI, DB_NAME
+from database.database import dbclient, database, collection
 from pytz import timezone
 from datetime import datetime, timedelta
 
-# Create an async client with Motor
-dbclient = motor.motor_asyncio.AsyncIOMotorClient(DB_URI)
-database = dbclient[DB_NAME]
-collection = database['premium-users']
-
+# collection is already imported from database.database and is a motor collection
 
 # Check if the user is a premium user (active only)
 async def is_premium_user(user_id):

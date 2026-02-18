@@ -4,18 +4,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def get_int(key, default="0"):
+    val = os.environ.get(key, default)
+    if not val:
+        return int(default)
+    return int(val)
+
 # --- Required Variables --- #
 API_HASH = os.environ.get("API_HASH", "")
-APP_ID = int(os.environ.get("APP_ID", "0"))
+APP_ID = get_int("APP_ID")
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")
 DB_URI = os.environ.get("DB_URI", "")
 DB_NAME = os.environ.get("DB_NAME", "BotDB")
-OWNER_ID = int(os.environ.get("OWNER_ID", "0"))
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "0"))
+OWNER_ID = get_int("OWNER_ID")
+CHANNEL_ID = get_int("CHANNEL_ID")
 
 # --- Optional Variables --- #
-PORT = int(os.environ.get("PORT", "8080"))
-TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "4"))
+PORT = get_int("PORT", "8080")
+TG_BOT_WORKERS = get_int("TG_BOT_WORKERS", "4")
 
 # --- Pics and Videos --- #
 PICS = os.environ.get("PICS", "https://telegra.ph/file/5593d624d11d92bceb48e.jpg").split()
@@ -34,13 +40,13 @@ UPI_ID = os.environ.get("UPI_ID", "")
 SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", "")
 
 # --- Referral System --- #
-REFERRAL_COUNT = int(os.environ.get("REFERRAL_COUNT", "10"))
-REFERRAL_PREMIUM_DAYS = int(os.environ.get("REFERRAL_PREMIUM_DAYS", "7"))
+REFERRAL_COUNT = get_int("REFERRAL_COUNT", "10")
+REFERRAL_PREMIUM_DAYS = get_int("REFERRAL_PREMIUM_DAYS", "7")
 
 # --- Other Settings --- #
 CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>{file_name}</b>")
-MIN_ID = int(os.environ.get("MIN_ID", "1"))
-MAX_ID = int(os.environ.get("MAX_ID", "1000"))
+MIN_ID = get_int("MIN_ID", "1")
+MAX_ID = get_int("MAX_ID", "1000")
 VIDEOS_RANGE = range(MIN_ID, MAX_ID + 1)
 
 # --- Logging --- #
@@ -49,3 +55,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 LOGGER = logging.getLogger
+
+# --- Validation --- #
+if not all([API_HASH, APP_ID, TG_BOT_TOKEN, DB_URI]):
+    logging.warning("One or more essential environment variables are missing (API_HASH, APP_ID, TG_BOT_TOKEN, DB_URI). The bot may not start correctly.")
