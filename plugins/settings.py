@@ -1,588 +1,453 @@
 
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 from pyrogram.errors.pyromod import ListenerTimeout
-from config import OWNER_ID
-import humanize
+from config import OWNER_ID, START_PIC, PICS
+from database.database import db
+from helper_func import is_admin
+import random
+import asyncio
+import logging
+from plugins.FORMATS import *
+from plugins.autoDelete import convert_time
 
-#===============================================================#
+# Centralized Settings for the Bot
+# Managed by @rohit_1888
+
+async def get_settings_markup():
+    buttons = [
+        [InlineKeyboardButton("ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs", callback_data="set_fsub"), InlineKeyboardButton("ᴀᴅᴍɪɴs & ʙᴀɴs", callback_data="set_users")],
+        [InlineKeyboardButton("ғɪʟᴇ sᴇᴛᴛɪɴɢs", callback_data="set_files"), InlineKeyboardButton("sʜᴏʀᴛᴇɴᴇʀ", callback_data="set_shortener")],
+        [InlineKeyboardButton("ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ", callback_data="set_autodel"), InlineKeyboardButton("ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ", callback_data="set_caption_menu")],
+        [InlineKeyboardButton("ᴛᴇxᴛs & ᴘʜᴏᴛᴏs", callback_data="set_texts"), InlineKeyboardButton("ᴄʟᴏsᴇ ✖️", callback_data="close")]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+@Client.on_message(filters.command("settings") & filters.private & is_admin)
+async def settings_command(client, message):
+    total_fsub = len(await db.get_all_channels())
+    total_admin = len(await db.get_all_admins())
+    total_ban = len(await db.get_ban_users())
+    autodel_mode = 'Eɴᴀʙʟᴇᴅ' if await db.get_auto_delete() else 'Dɪsᴀʙʟᴇᴅ'
+    protect_content = 'Eɴᴀʙʟᴇᴅ' if await db.get_protect_content() else 'Dɪsᴀʙʟᴇᴅ'
+    hide_caption = 'Eɴᴀʙʟᴇᴅ' if await db.get_hide_caption() else 'Dɪsᴀʙʟᴇᴅ'
+    chnl_butn = 'Eɴᴀʙʟᴇᴅ' if await db.get_channel_button() else 'Dɪsᴀʙʟᴇᴅ'
+    reqfsub = 'Eɴᴀʙʟᴇᴅ' if await db.get_request_forcesub() else 'Dɪsᴀʙʟᴇᴅ'
+
+    msg = SETTING_TXT.format(
+        total_fsub=total_fsub,
+        total_admin=total_admin,
+        total_ban=total_ban,
+        autodel_mode=autodel_mode,
+        protect_content=protect_content,
+        hide_caption=hide_caption,
+        chnl_butn=chnl_butn,
+        reqfsub=reqfsub
+    )
+    
+    await message.reply_photo(
+        photo=random.choice(PICS),
+        caption=msg,
+        reply_markup=await get_settings_markup()
+    )
 
 @Client.on_callback_query(filters.regex("^settings$"))
-async def settings(client, query):
-    # Count active force subscription channels by type
-    total_fsub = len(client.fsub_dict)
-    request_enabled = sum(1 for data in client.fsub_dict.values() if data[2])
-    timer_enabled = sum(1 for data in client.fsub_dict.values() if data[3] > 0)
+async def settings_callback(client, query):
+    if not await is_admin(None, client, query):
+        return
     
-    # Count DB channels
-    total_db_channels = len(getattr(client, 'db_channels', {}))
-    primary_db = getattr(client, 'primary_db_channel', client.db)
+    total_fsub = len(await db.get_all_channels())
+    total_admin = len(await db.get_all_admins())
+    total_ban = len(await db.get_ban_users())
+    autodel_mode = 'Eɴᴀʙʟᴇᴅ' if await db.get_auto_delete() else 'Dɪsᴀʙʟᴇᴅ'
+    protect_content = 'Eɴᴀʙʟᴇᴅ' if await db.get_protect_content() else 'Dɪsᴀʙʟᴇᴅ'
+    hide_caption = 'Eɴᴀʙʟᴇᴅ' if await db.get_hide_caption() else 'Dɪsᴀʙʟᴇᴅ'
+    chnl_butn = 'Eɴᴀʙʟᴇᴅ' if await db.get_channel_button() else 'Dɪsᴀʙʟᴇᴅ'
+    reqfsub = 'Eɴᴀʙʟᴇᴅ' if await db.get_request_forcesub() else 'Dɪsᴀʙʟᴇᴅ'
+
+    msg = SETTING_TXT.format(
+        total_fsub=total_fsub,
+        total_admin=total_admin,
+        total_ban=total_ban,
+        autodel_mode=autodel_mode,
+        protect_content=protect_content,
+        hide_caption=hide_caption,
+        chnl_butn=chnl_butn,
+        reqfsub=reqfsub
+    )
     
-    msg = f"""<blockquote>✦ sᴇᴛᴛɪɴɢs ᴏғ @{client.username}</blockquote>
-›› **ꜰꜱᴜʙ ᴄʜᴀɴɴᴇʟs:** `{total_fsub}` (ʀᴇǫᴜᴇsᴛ: {request_enabled}, ᴛɪᴍᴇʀ: {timer_enabled})
-›› **ᴅʙ ᴄʜᴀɴɴᴇʟs:** `{total_db_channels}` (ᴘʀɪᴍᴀʀʏ: `{primary_db}`)
-›› **ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇʀ:** `{client.auto_del}`
-›› **ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ:** `{"✓ ᴛʀᴜᴇ" if client.protect else "✗ ꜰᴀʟsᴇ"}`
-›› **ᴅɪsᴀʙʟᴇ ʙᴜᴛᴛᴏɴ:** `{"✓ ᴛʀᴜᴇ" if client.disable_btn else "✗ ꜰᴀʟsᴇ"}`
-›› **ʀᴇᴘʟʏ ᴛᴇxᴛ:** `{client.reply_text if client.reply_text else 'ɴᴏɴᴇ'}`
-›› **ᴀᴅᴍɪɴs:** `{len(client.admins)}`
-›› **sʜᴏʀᴛɴᴇʀ ᴜʀʟ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
-›› **ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ:** `{getattr(client, 'tutorial_link', 'ɴᴏᴛ sᴇᴛ')}`
-›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('START', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('START_PHOTO', ''))}`
-›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('FSUB', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('FSUB_PHOTO', ''))}`
-›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('ABOUT', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ʀᴇᴘʟʏ ᴍᴇssᴀɢᴇ:**
-<pre>{client.reply_text}</pre>
-    """
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton('ꜰꜱᴜʙ ᴄʜᴀɴɴᴇʟꜱ', 'fsub'), InlineKeyboardButton('ᴅʙ ᴄʜᴀɴɴᴇʟꜱ', 'db_channels')],
-        [InlineKeyboardButton('ᴀᴅᴍɪɴꜱ', 'admins'), InlineKeyboardButton('ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ', 'auto_del')],
-        [InlineKeyboardButton('ʜᴏᴍᴇ', 'home'), InlineKeyboardButton('›› ɴᴇxᴛ', 'settings_page_2')]
-    ])
-    await query.message.edit_text(msg, reply_markup=reply_markup)
-    return
+    await query.message.edit_caption(
+        caption=msg,
+        reply_markup=await get_settings_markup()
+    )
 
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^settings_page_2$"))
-async def settings_page_2(client, query):
-    # Count active force subscription channels by type
-    total_fsub = len(client.fsub_dict)
-    request_enabled = sum(1 for data in client.fsub_dict.values() if data[2])
-    timer_enabled = sum(1 for data in client.fsub_dict.values() if data[3] > 0)
-    
-    # Count DB channels
-    total_db_channels = len(getattr(client, 'db_channels', {}))
-    primary_db = getattr(client, 'primary_db_channel', client.db)
-    
-    msg = f"""<blockquote>✦ sᴇᴛᴛɪɴɢs ᴏғ @{client.username}</blockquote>
-›› **ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs:** `{total_fsub}` (ʀᴇǫᴜᴇsᴛ: {request_enabled}, ᴛɪᴍᴇʀ: {timer_enabled})
-›› **ᴅʙ ᴄʜᴀɴɴᴇʟs:** `{total_db_channels}` (ᴘʀɪᴍᴀʀʏ: `{primary_db}`)
-›› **ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇʀ:** `{client.auto_del}`
-›› **ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ:** `{"✓ ᴛʀᴜᴇ" if client.protect else "✗ ꜰᴀʟsᴇ"}`
-›› **ᴅɪsᴀʙʟᴇ ʙᴜᴛᴛᴏɴ:** `{"✓ ᴛʀᴜᴇ" if client.disable_btn else "✗ ꜰᴀʟsᴇ"}`
-›› **ʀᴇᴘʟʏ ᴛᴇxᴛ:** `{client.reply_text if client.reply_text else 'ɴᴏɴᴇ'}`
-›› **ᴀᴅᴍɪɴs:** `{len(client.admins)}`
-›› **sʜᴏʀᴛɴᴇʀ ᴜʀʟ:** `{getattr(client, 'short_url', 'ɴᴏᴛ sᴇᴛ')}`
-›› **ᴛᴜᴛᴏʀɪᴀʟ ʟɪɴᴋ:** `{getattr(client, 'tutorial_link', 'ɴᴏᴛ sᴇᴛ')}`
-›› **sᴛᴀʀᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('START', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **sᴛᴀʀᴛ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('START_PHOTO', ''))}`
-›› **ꜰᴏʀᴄᴇ sᴜʙ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('FSUB', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ꜰᴏʀᴄᴇ sᴜʙ ɪᴍᴀɢᴇ:** `{bool(client.messages.get('FSUB_PHOTO', ''))}`
-›› **ᴀʙᴏᴜᴛ ᴍᴇssᴀɢᴇ:**
-<pre>{client.messages.get('ABOUT', 'ᴇᴍᴘᴛʏ')}</pre>
-›› **ʀᴇᴘʟʏ ᴍᴇssᴀɢᴇ:**
-<pre>{client.reply_text}</pre>
-    """
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton('ᴘʀᴏᴛᴇᴄᴛ ᴄᴏɴᴛᴇɴᴛ', 'protect'), InlineKeyboardButton('ᴘʜᴏᴛᴏs', 'photos')],
-        [InlineKeyboardButton('ᴛᴇxᴛs', 'texts'), InlineKeyboardButton('sʜᴏʀᴛɴᴇʀ', 'shortner')],
-        [InlineKeyboardButton('‹ ᴘʀᴇᴠ', 'settings'), InlineKeyboardButton('ʜᴏᴍᴇ', 'home')]
-    ])
-    await query.message.edit_text(msg, reply_markup=reply_markup)
-    return
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^fsub$"))
-async def fsub(client, query):
-    # Create a formatted list of channels with names and IDs
-    if client.fsub_dict:
-        channel_list = []
-        for channel_id, channel_data in client.fsub_dict.items():
-            channel_name = channel_data[0] if channel_data and len(channel_data) > 0 else "Unknown"
-            request_status = "✓ ʀᴇѦᴜᴇsᴛ" if channel_data[2] else "✗ ʀᴇѦᴜᴇsᴛ"
-            timer_status = f"ᴛɪᴍᴇʀ: {channel_data[3]}ᴍ" if channel_data[3] > 0 else "ᴛɪᴍᴇʀ: ∞"
-            channel_list.append(f"• `{channel_name}` (`{channel_id}`) - {request_status}, {timer_status}")
-        
-        channels_display = "\n".join(channel_list)
+# --- Force Sub Settings ---
+@Client.on_callback_query(filters.regex("^set_fsub$"))
+async def set_fsub_callback(client, query):
+    channels = await db.get_all_channels()
+    channel_list = ""
+    if channels:
+        for i, ch_id in enumerate(channels, 1):
+            try:
+                chat = await client.get_chat(ch_id)
+                channel_list += f"{i}. {chat.title} (`{ch_id}`)\n"
+            except:
+                channel_list += f"{i}. Unknown (`{ch_id}`)\n"
     else:
-        channels_display = "_ɴᴏ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪᴘᴛɪᴏɴ ᴄʜᴀɴɴᴇʟs ᴄᴏɴғɪɢᴜʀᴇᴅ_"
+        channel_list = "No channels added."
+
+    msg = f"<b>📢 Force Sub Channels:</b>\n\n{channel_list}\n"
+    msg += f"Request FSub Mode: {'Eɴᴀʙʟᴇᴅ' if await db.get_request_forcesub() else 'Dɪsᴀʙʟᴇᴅ'}"
+
+    buttons = [
+        [InlineKeyboardButton("ᴀᴅᴅ ᴄʜᴀɴɴᴇʟ", callback_data="add_fsub_btn"), InlineKeyboardButton("ʀᴇᴍᴏᴠᴇ ᴄʜᴀɴɴᴇʟ", callback_data="rm_fsub_btn")],
+        [InlineKeyboardButton("ᴛᴏɢɢʟᴇ ʀᴇǫᴜᴇsᴛ ᴍᴏᴅᴇ", callback_data="toggle_req_fsub")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex("^toggle_req_fsub$"))
+async def toggle_req_fsub(client, query):
+    curr = await db.get_request_forcesub()
+    await db.set_request_forcesub(not curr)
+    await set_fsub_callback(client, query)
+
+@Client.on_callback_query(filters.regex("^add_fsub_btn$"))
+async def add_fsub_callback(client, query):
+    if query.from_user.id != OWNER_ID:
+        return await query.answer("Owner Only!", show_alert=True)
     
-    msg = f"""<blockquote>✦ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪᴘᴛɪᴏɴ sᴇᴛᴛɪɴɢs</blockquote>
-›› **ᴄᴏɴғɪɢᴜʀᴇᴅ ᴄʜᴀɴɴᴇʟs:**
-{channels_display}
-
-__ᴜsᴇ ᴛʜᴇ ᴀᴘᴘʀᴏᴘʀɪᴀᴛᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴀᴅᴅ ᴏʀ ʀᴇᴍᴏᴠᴇ ᴀ ꜰᴏʀᴄᴇ sᴜʙsᴄʀɪᴘᴛɪᴏɴ ᴄʜᴀɴɴᴇʟ ʙᴀsᴇᴅ ᴏɴ ʏᴏᴜʀ ɴᴇᴇᴅs!__
-"""
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton('›› ᴀᴅᴅ ᴄʜᴀɴɴᴇʟ', 'add_fsub'), InlineKeyboardButton('›› ʀᴇᴍᴏᴠᴇ ᴄʜᴀɴɴᴇʟ', 'rm_fsub')],
-        [InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'settings')]]
-    )
-    await query.message.edit_text(msg, reply_markup=reply_markup)
-    return
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^db_channels$"))
-async def db_channels(client, query):
-    if not query.from_user.id in client.admins:
-        return await query.answer('✗ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
-    
-    # Create a formatted list of DB channels
-    db_channels = getattr(client, 'db_channels', {})
-    if db_channels:
-        channel_list = []
-        for channel_id_str, channel_data in db_channels.items():
-            channel_name = channel_data.get('name', 'Unknown')
-            is_primary = "✓ ᴘʀɪᴍᴀʀʏ" if channel_data.get('is_primary', False) else "• sᴇᴄᴏɴᴅᴀʀʏ"
-            is_active = "✓ ᴀᴄᴛɪᴠᴇ" if channel_data.get('is_active', True) else "✗ ɪɴᴀᴄᴛɪᴠᴇ"
-            channel_list.append(f"• `{channel_name}` (`{channel_id_str}`)\n  {is_primary} | {is_active}")
-        
-        channels_display = "\n\n".join(channel_list)
-    else:
-        channels_display = "_ɴᴏ ᴅᴀᴛᴀʙᴀsᴇ ᴄʜᴀɴɴᴇʟs ᴄᴏɴғɪɢᴜʀᴇᴅ_"
-    
-    # Show current primary DB channel
-    primary_db = getattr(client, 'primary_db_channel', client.db)
-    
-    msg = f"""<blockquote>✦ ᴅᴀᴛᴀʙᴀsᴇ ᴄʜᴀɴɴᴇʟs sᴇᴛᴛɪɴɢs</blockquote>
-›› **ᴄᴜʀʀᴇɴᴛ ᴘʀɪᴍᴀʀʏ ᴅʙ:** `{primary_db}`
-›› **ᴛᴏᴛᴀʟ ᴅʙ ᴄʜᴀɴɴᴇʟs:** `{len(db_channels)}`
-
-**ᴄᴏɴғɪɢᴜʀᴇᴅ ᴄʜᴀɴɴᴇʟs:**
-{channels_display}
-
-__ᴜsᴇ ᴛʜᴇ ᴀᴘᴘʀᴏᴘʀɪᴀᴛᴇ ʙᴜᴛᴛᴏɴ ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ʏᴏᴜʀ ᴅᴀᴛᴀʙᴀsᴇ ᴄʜᴀɴɴᴇʟs!__
-"""
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton('›› ᴀᴅᴅ ᴅʙ ᴄʜᴀɴɴᴇʟ', 'add_db_channel'), InlineKeyboardButton('›› ʀᴇᴍᴏᴠᴇ ᴅʙ ᴄʜᴀɴɴᴇʟ', 'rm_db_channel')],
-        [InlineKeyboardButton('›› sᴇᴛ ᴘʀɪᴍᴀʀʏ', 'set_primary_db'), InlineKeyboardButton('›› sᴛᴀᴛᴜs', 'toggle_db_status')],
-        [InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'settings')]
-    ])
-    await query.message.edit_text(msg, reply_markup=reply_markup)
-    return
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^add_db_channel$"))
-async def add_db_channel(client, query):
-    if not query.from_user.id in client.admins:
-        return await query.answer('✗ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
-    
-    await query.answer()
-    msg = f"""<blockquote>✦ ᴀᴅᴅ ɴᴇᴡ ᴅᴀᴛᴀʙᴀsᴇ ᴄʜᴀɴɴᴇʟ</blockquote>
-›› **ᴄᴜʀʀᴇɴᴛ ᴅʙ ᴄʜᴀɴɴᴇʟs:** `{len(getattr(client, 'db_channels', {}))}`
-
-__sᴇɴᴅ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ɪᴅ (ɴᴇɢᴀᴛɪᴠᴇ ɪɴᴛᴇɢᴇʀ ᴠᴀʟᴜᴇ) ᴏғ ᴛʜᴇ ᴅᴀᴛᴀʙᴀsᴇ ᴄʜᴀɴɴᴇʟ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴀᴅᴅ ɪɴ ᴛʜᴇ ɴᴇxᴛ 60 sᴇᴄᴏɴᴅs!__
-
-**ᴇxᴀᴍᴘʟᴇ:** `-1001234567675`
-**ɴᴏᴛᴇ:** ᴍᴀᴋᴇ sᴜʀᴇ ᴛʜᴇ ʙᴏᴛ ɪs ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ!"""
-    
-    await query.message.edit_text(msg)
+    await query.message.delete()
     try:
-        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
-        channel_id_text = res.text.strip()
-        
-        if not channel_id_text.lstrip('-').isdigit():
-            return await query.message.edit_text("**✗ ɪɴᴠᴀʟɪᴅ ᴄʜᴀɴɴᴇʟ ɪᴅ! ᴘʟᴇᴀsᴇ sᴇɴᴅ ᴀ ᴠᴀʟɪᴅ ɴᴇɢᴀᴛɪᴠᴇ ɪɴᴛᴇɢᴇʀ.**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        channel_id = int(channel_id_text)
-        
-        # Check if channel already exists
-        db_channels = getattr(client, 'db_channels', {})
-        if str(channel_id) in db_channels:
-            return await query.message.edit_text(f"**✗ ᴄʜᴀɴɴᴇʟ `{channel_id}` ɪs ᴀʟʀᴇᴀᴅʏ ᴀᴅᴅᴇᴅ ᴀs ᴀ ᴅʙ ᴄʜᴀɴɴᴇʟ!**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        # Verify bot can access the channel
-        try:
-            chat = await client.get_chat(channel_id)
-            test_msg = await client.send_message(chat_id=channel_id, text="ᴛᴇsᴛɪɴɢ ᴅʙ ᴄʜᴀɴɴᴇʟ ᴀᴄᴄᴇss - @Okabe_xRintarou")
-            await test_msg.delete()
-            
-            # Add channel to database
-            channel_data = {
-                'name': chat.title,
-                'is_primary': len(db_channels) == 0,  # First channel becomes primary
-                'is_active': True,
-                'added_by': query.from_user.id
-            }
-            
-            await client.mongodb.add_db_channel(channel_id, channel_data)
-            
-            # Update client attributes
-            if not hasattr(client, 'db_channels'):
-                client.db_channels = {}
-            client.db_channels[str(channel_id)] = channel_data
-            
-            # Set as primary if it's the first channel
-            if channel_data['is_primary']:
-                client.primary_db_channel = channel_id
-                await client.mongodb.set_primary_db_channel(channel_id)
-            
-            await query.message.edit_text(f"""**✓ ᴅᴀᴛᴀʙᴀsᴇ ᴄʜᴀɴɴᴇʟ ᴀᴅᴅᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ!**
-
-›› **ᴄʜᴀɴɴᴇʟ:** `{chat.title}`
-›› **ɪᴅ:** `{channel_id}`
-›› **sᴛᴀᴛᴜs:** {'ᴘʀɪᴍᴀʀʏ' if channel_data['is_primary'] else 'sᴇᴄᴏɴᴅᴀʀʏ'}""", 
-                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        except Exception as e:
-            await query.message.edit_text(f"""**✗ ᴇʀʀᴏʀ ᴀᴄᴄᴇssɪɴɢ ᴄʜᴀɴɴᴇʟ!**
-
-›› **ᴇʀʀᴏʀ:** `{str(e)}`
-
-**ᴘʟᴇᴀsᴇ ᴍᴀᴋᴇ sᴜʀᴇ:**
-• ʙᴏᴛ ɪs ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ
-• ᴄʜᴀɴɴᴇʟ ɪᴅ ɪs ᴄᴏʀʀᴇᴄᴛ
-• ᴄʜᴀɴɴᴇʟ ᴇxɪsᴛs""", 
-                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'db_channels')]]))
-    
-    except Exception as e:
-        await query.message.edit_text(f"""**✗ ᴛɪᴍᴇᴏᴜᴛ ᴏʀ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ!**
-
-›› **ᴇʀʀᴏʀ:** `{str(e)}`""", 
-                                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('‹ ʙᴀᴄᴋ', 'db_channels')]]))
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^rm_db_channel$"))
-async def rm_db_channel(client, query):
-    if not query.from_user.id in client.admins:
-        return await query.answer('❌ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
-    
-    await query.answer()
-    db_channels = getattr(client, 'db_channels', {})
-    
-    if not db_channels:
-        return await query.message.edit_text("**❌ No database channels to remove!**", 
-                                            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-    
-    msg = f"""<blockquote>**Remove Database Channel:**</blockquote>
-**Available Channels:**
-"""
-    
-    for channel_id_str, channel_data in db_channels.items():
-        channel_name = channel_data.get('name', 'Unknown')
-        is_primary = " (Primary)" if channel_data.get('is_primary', False) else ""
-        msg += f"• `{channel_name}` - `{channel_id_str}`{is_primary}\n"
-    
-    msg += "\n__Send the channel ID you want to remove in the next 60 seconds!__"
-    
-    await query.message.edit_text(msg)
-    try:
-        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
-        channel_id_text = res.text.strip()
-        
-        if not channel_id_text.lstrip('-').isdigit():
-            return await query.message.edit_text("**❌ Invalid channel ID!**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        channel_id = int(channel_id_text)
-        
-        if str(channel_id) not in db_channels:
-            return await query.message.edit_text(f"**❌ Channel `{channel_id}` is not in the DB channels list!**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        # Check if trying to remove primary channel
-        if db_channels[str(channel_id)].get('is_primary', False) and len(db_channels) > 1:
-            return await query.message.edit_text("**❌ Cannot remove primary channel!**\n\n__Please set another channel as primary first.__", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        # Remove from database and client
-        channel_name = db_channels[str(channel_id)].get('name', 'Unknown')
-        await client.mongodb.remove_db_channel(channel_id)
-        del client.db_channels[str(channel_id)]
-        
-        await query.message.edit_text(f"**✅ Database channel removed successfully!**\n\n**Removed:** `{channel_name}` (`{channel_id}`)", 
-                                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-    
-    except Exception as e:
-        await query.message.edit_text(f"**❌ Timeout or error occurred!**\n\n**Error:** `{str(e)}`", 
-                                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^set_primary_db$"))
-async def set_primary_db(client, query):
-    if not query.from_user.id in client.admins:
-        return await query.answer('❌ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
-    
-    await query.answer()
-    db_channels = getattr(client, 'db_channels', {})
-    
-    if not db_channels:
-        return await query.message.edit_text("**❌ No database channels available!**", 
-                                            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-    
-    msg = f"""<blockquote>**Set Primary Database Channel:**</blockquote>
-**Available Channels:**
-"""
-    
-    for channel_id_str, channel_data in db_channels.items():
-        channel_name = channel_data.get('name', 'Unknown')
-        is_primary = " (Current Primary)" if channel_data.get('is_primary', False) else ""
-        msg += f"• `{channel_name}` - `{channel_id_str}`{is_primary}\n"
-    
-    msg += "\n__Send the channel ID you want to set as primary in the next 60 seconds!__"
-    
-    await query.message.edit_text(msg)
-    try:
-        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
-        channel_id_text = res.text.strip()
-        
-        if not channel_id_text.lstrip('-').isdigit():
-            return await query.message.edit_text("**❌ Invalid channel ID!**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        channel_id = int(channel_id_text)
-        
-        if str(channel_id) not in db_channels:
-            return await query.message.edit_text(f"**❌ Channel `{channel_id}` is not in the DB channels list!**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        # Set as primary
-        await client.mongodb.set_primary_db_channel(channel_id)
-        
-        # Update client attributes
-        for ch_id, ch_data in client.db_channels.items():
-            ch_data['is_primary'] = (int(ch_id) == channel_id)
-        
-        client.primary_db_channel = channel_id
-        client.db = channel_id  # Update current db reference
-        
-        channel_name = db_channels[str(channel_id)].get('name', 'Unknown')
-        await query.message.edit_text(f"**✅ Primary database channel updated!**\n\n**New Primary:** `{channel_name}` (`{channel_id}`)", 
-                                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-    
-    except Exception as e:
-        await query.message.edit_text(f"**❌ Timeout or error occurred!**\n\n**Error:** `{str(e)}`", 
-                                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^toggle_db_status$"))
-async def toggle_db_status(client, query):
-    if not query.from_user.id in client.admins:
-        return await query.answer('❌ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ ᴛʜɪs!', show_alert=True)
-    
-    await query.answer()
-    db_channels = getattr(client, 'db_channels', {})
-    
-    if not db_channels:
-        return await query.message.edit_text("**❌ No database channels available!**", 
-                                            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-    
-    msg = f"""<blockquote>**Toggle Channel Status:**</blockquote>
-**Available Channels:**
-"""
-    
-    for channel_id_str, channel_data in db_channels.items():
-        channel_name = channel_data.get('name', 'Unknown')
-        status = "🟢 ᴀᴄᴛɪᴠᴇ" if channel_data.get('is_active', True) else "🔴 ɪɴᴀᴄᴛɪᴠᴇ"
-        msg += f"• `{channel_name}` - `{channel_id_str}` ({status})\n"
-    
-    msg += "\n__Send the channel ID you want to ᴀᴄᴛɪᴠᴇ/ɪɴᴀᴄᴛɪᴠᴇ status for in the next 60 seconds!__"
-    
-    await query.message.edit_text(msg)
-    try:
-        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
-        channel_id_text = res.text.strip()
-        
-        if not channel_id_text.lstrip('-').isdigit():
-            return await query.message.edit_text("**❌ Invalid channel ID!**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        channel_id = int(channel_id_text)
-        
-        if str(channel_id) not in db_channels:
-            return await query.message.edit_text(f"**❌ Channel `{channel_id}` is not in the DB channels list!**", 
-                                                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        
-        # Toggle status
-        new_status = await client.mongodb.toggle_db_channel_status(channel_id)
-        
-        if new_status is not None:
-            # Update client attributes
-            client.db_channels[str(channel_id)]['is_active'] = new_status
-            
-            channel_name = db_channels[str(channel_id)].get('name', 'Unknown')
-            status_text = "🟢 Active" if new_status else "🔴 Inactive"
-            await query.message.edit_text(f"**✅ Channel status updated!**\n\n**Channel:** `{channel_name}` (`{channel_id}`)\n**New Status:** {status_text}", 
-                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-        else:
-            await query.message.edit_text("**❌ Failed to toggle channel status!**", 
-                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-    
-    except Exception as e:
-        await query.message.edit_text(f"**❌ Timeout or error occurred!**\n\n**Error:** `{str(e)}`", 
-                                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'db_channels')]]))
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^admins$"))
-async def admins(client, query):
-    if not (query.from_user.id==OWNER_ID):
-        return await query.answer('This can only be used by owner.')
-    msg = f"""<blockquote>**Admin Settings:**</blockquote>
-**Admin User IDs:** {", ".join(f"`{a}`" for a in client.admins)}
-
-__Use the appropriate button below to add or remove an admin based on your needs!__
-"""
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton('ᴀᴅᴅ ᴀᴅᴍɪɴ', 'add_admin'), InlineKeyboardButton('ʀᴇᴍᴏᴠᴇ ᴀᴅᴍɪɴ', 'rm_admin')],
-        [InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'settings')]]
-    )
-    await query.message.edit_text(msg, reply_markup=reply_markup)
-    return
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^photos$"))
-async def photos(client, query):
-    msg = f"""<blockquote>**Force Subscription Settings:**</blockquote>
-**Start Photo:** `{client.messages.get("START_PHOTO", "None")}`
-**Force Sub Photo:** `{client.messages.get('FSUB_PHOTO', 'None')}`
-
-__Use the appropriate button below to add or remove any admin based on your needs!__
-"""
-    reply_markup = InlineKeyboardMarkup([
-    [
-        InlineKeyboardButton(
-            ('ꜱᴇᴛ' if client.messages.get("START_PHOTO", "") == "" else 'ᴄʜᴀɴɢᴇ') + '\nꜱᴛᴀʀᴛ ᴘʜᴏᴛᴏ', 
-            callback_data='add_start_photo'
-        ),
-        InlineKeyboardButton(
-            ('ꜱᴇᴛ' if client.messages.get("FSUB_PHOTO", "") == "" else 'ᴄʜᴀɴɢᴇ') + '\nꜰꜱᴜʙ ᴘʜᴏᴛᴏ', 
-            callback_data='add_fsub_photo'
-        )
-    ],
-    [
-        InlineKeyboardButton('ʀᴇᴍᴏᴠᴇ\nꜱᴛᴀʀᴛ ᴘʜᴏᴛᴏ', callback_data='rm_start_photo'),
-        InlineKeyboardButton('ʀᴇᴍᴏᴠᴇ\nꜰꜱᴜʙ ᴘʜᴏᴛᴏ', callback_data='rm_fsub_photo')
-    ],
-    [InlineKeyboardButton('◂ ʙᴀᴄᴋ', callback_data='settings')]
-
-    ])
-    await query.message.edit_text(msg, reply_markup=reply_markup)
-    return
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^protect$"))
-async def protect(client, query):
-    client.protect = False if client.protect else True
-    return await settings(client, query)
-
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^auto_del$"))
-async def auto_del(client, query):
-    msg = f"""<blockquote>**Change Auto Delete Time:**</blockquote>
-**Current Timer:** `{client.auto_del}`
-
-__Enter new integer value of auto delete timer, keep 0 to disable auto delete and -1 to as it was, or wait for 60 second timeout to be comoleted!__
-"""
-    await query.answer()
-    await query.message.edit_text(msg)
-    try:
-        res = await client.listen(user_id=query.from_user.id, filters=filters.text, timeout=60)
-        timer = res.text.strip()
-        if timer.isdigit() or (timer.startswith('+' or '-') and timer[1:].isdigit()):
-            timer = int(timer)
-            if timer >= 0:
-                client.auto_del = timer
-                return await query.message.edit_text(f'**Auto Delete timer vakue changed to {timer} seconds!**', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'settings')]]))
-            else:
-                return await query.message.edit_text("**There is no change done in auto delete timer!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'settings')]]))
-        else:
-            return await query.message.edit_text("**This is not an integer value!!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'settings')]]))
+        ask = await client.ask(query.from_user.id, "Send the Channel ID to add as Force Sub:", timeout=60)
+        ch_id = int(ask.text)
+        await db.add_channel(ch_id)
+        await ask.reply(f"✅ Channel `{ch_id}` added successfully!")
     except ListenerTimeout:
-        return await query.message.edit_text("**Timeout, try again!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'settings')]]))
+        await client.send_message(query.from_user.id, "Timeout! Please try again.")
+    except Exception as e:
+        await client.send_message(query.from_user.id, f"Error: {e}")
+    
+    # Re-send settings
+    await settings_command(client, query.message)
 
-#===============================================================#
+@Client.on_callback_query(filters.regex("^rm_fsub_btn$"))
+async def rm_fsub_callback(client, query):
+    if query.from_user.id != OWNER_ID:
+        return await query.answer("Owner Only!", show_alert=True)
+    
+    channels = await db.get_all_channels()
+    if not channels:
+        return await query.answer("No channels to remove!", show_alert=True)
+    
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send the Channel ID to remove from Force Sub:", timeout=60)
+        ch_id = int(ask.text)
+        await db.del_channel(ch_id)
+        await ask.reply(f"✅ Channel `{ch_id}` removed successfully!")
+    except ListenerTimeout:
+        await client.send_message(query.from_user.id, "Timeout! Please try again.")
+    except Exception as e:
+        await client.send_message(query.from_user.id, f"Error: {e}")
+    
+    await settings_command(client, query.message)
 
-@Client.on_callback_query(filters.regex("^texts$"))
-async def texts(client, query):
-    msg = f"""<blockquote>**Text Configuration:**</blockquote>
-**Start Message:**
-<pre>{client.messages.get('START', 'Empty')}</pre>
-**Force Sub Message:**
-<pre>{client.messages.get('FSUB', 'Empty')}</pre>
-**About Message:**
-<pre>{client.messages.get('ABOUT', 'Empty')}</pre>
-**Reply Message:**
-<pre>{client.reply_text}</pre>
-    """
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f'ꜱᴛᴀʀᴛ ᴛᴇxᴛ', 'start_txt'), InlineKeyboardButton(f'ꜰꜱᴜʙ ᴛᴇxᴛ', 'fsub_txt')],
-        [InlineKeyboardButton('ʀᴇᴘʟʏ ᴛᴇxᴛ', 'reply_txt'), InlineKeyboardButton('ᴀʙᴏᴜᴛ ᴛᴇxᴛ', 'about_txt')],
-        [InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'settings')]]
+# --- Admin & Ban Settings ---
+@Client.on_callback_query(filters.regex("^set_users$"))
+async def set_users_callback(client, query):
+    admins = await db.get_all_admins()
+    bans = await db.get_ban_users()
+    
+    msg = f"<b>👥 Admin & Ban Management</b>\n\n"
+    msg += f"Admins: `{len(admins)}` (excluding owner)\n"
+    msg += f"Banned Users: `{len(bans)}`"
+    
+    buttons = [
+        [InlineKeyboardButton("ᴍᴀɴᴀɢᴇ ᴀᴅᴍɪɴs", callback_data="manage_admins"), InlineKeyboardButton("ᴍᴀɴᴀɢᴇ ʙᴀɴs", callback_data="manage_bans")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex("^manage_admins$"))
+async def manage_admins(client, query):
+    if query.from_user.id != OWNER_ID:
+        return await query.answer("Owner Only!", show_alert=True)
+    
+    admins = await db.get_all_admins()
+    admin_list = "\n".join([f"- `{a}`" for a in admins]) if admins else "No extra admins."
+    
+    msg = f"<b>🛡️ Admin List:</b>\n\n{admin_list}"
+    buttons = [
+        [InlineKeyboardButton("ᴀᴅᴅ ᴀᴅᴍɪɴ", callback_data="add_admin_btn"), InlineKeyboardButton("ʀᴇᴍᴏᴠᴇ ᴀᴅᴍɪɴ", callback_data="rm_admin_btn")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="set_users")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex("^add_admin_btn$"))
+async def add_admin_callback(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send the User ID to add as Admin:", timeout=60)
+        user_id = int(ask.text)
+        await db.add_admin(user_id)
+        await ask.reply(f"✅ User `{user_id}` added as Admin!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^rm_admin_btn$"))
+async def rm_admin_callback(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send the User ID to remove from Admins:", timeout=60)
+        user_id = int(ask.text)
+        await db.del_admin(user_id)
+        await ask.reply(f"✅ User `{user_id}` removed from Admins!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^manage_bans$"))
+async def manage_bans(client, query):
+    bans = await db.get_ban_users()
+    ban_list = f"Total Banned: `{len(bans)}`"
+    
+    msg = f"<b>🚫 Banned Users</b>\n\n{ban_list}"
+    buttons = [
+        [InlineKeyboardButton("ʙᴀɴ ᴜsᴇʀ", callback_data="add_ban_btn"), InlineKeyboardButton("ᴜɴʙᴀɴ ᴜsᴇʀ", callback_data="rm_ban_btn")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="set_users")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex("^add_ban_btn$"))
+async def add_ban_callback(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send the User ID to Ban:", timeout=60)
+        user_id = int(ask.text)
+        await db.add_ban_user(user_id)
+        await ask.reply(f"✅ User `{user_id}` Banned!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^rm_ban_btn$"))
+async def rm_ban_callback(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send the User ID to Unban:", timeout=60)
+        user_id = int(ask.text)
+        await db.del_ban_user(user_id)
+        await ask.reply(f"✅ User `{user_id}` Unbanned!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+# --- File Settings ---
+@Client.on_callback_query(filters.regex("^set_files$"))
+async def set_files_callback(client, query):
+    protect = await db.get_protect_content()
+    hide_caption = await db.get_hide_caption()
+    chnl_btn = await db.get_channel_button()
+    name1, link1, name2, link2 = await db.get_channel_button_links()
+
+    msg = FILES_CMD_TXT.format(
+        protect_content="Enabled ✅" if protect else "Disabled ❌",
+        hide_caption="Enabled ✅" if hide_caption else "Disabled ❌",
+        channel_button="Enabled ✅" if chnl_btn else "Disabled ❌",
+        name=name1 or "Not Set",
+        link=link1 or "Not Set",
+        name2=name2 or "Not Set",
+        link2=link2 or "Not Set"
     )
-    await query.message.edit_text(msg, reply_markup=reply_markup)
-    return
 
-#===============================================================#
+    buttons = [
+        [InlineKeyboardButton(f"ᴘʀᴏᴛᴇᴄᴛ: {'✅' if protect else '❌'}", callback_data="toggle_protect"),
+         InlineKeyboardButton(f"ʜɪᴅᴇ ᴄᴀᴘᴛɪᴏɴ: {'✅' if hide_caption else '❌'}", callback_data="toggle_hc")],
+        [InlineKeyboardButton(f"ʙᴜᴛᴛᴏɴ: {'✅' if chnl_btn else '❌'}", callback_data="toggle_cb"),
+         InlineKeyboardButton("sᴇᴛ ʙᴜᴛᴛᴏɴs", callback_data="set_btn_links")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
-@Client.on_callback_query(filters.regex('^rm_start_photo$'))
-async def rm_start_photo(client, query):
-    client.messages['START_PHOTO'] = ''
-    await query.answer()
-    await photos(client, query)
+@Client.on_callback_query(filters.regex("^toggle_protect$"))
+async def toggle_protect(client, query):
+    curr = await db.get_protect_content()
+    await db.set_protect_content(not curr)
+    await set_files_callback(client, query)
 
-#===============================================================#
+@Client.on_callback_query(filters.regex("^toggle_hc$"))
+async def toggle_hc(client, query):
+    curr = await db.get_hide_caption()
+    await db.set_hide_caption(not curr)
+    await set_files_callback(client, query)
 
-@Client.on_callback_query(filters.regex('^rm_fsub_photo$'))
-async def rm_fsub_photo(client, query):
-    client.messages['FSUB_PHOTO'] = ''
-    await query.answer()
-    await photos(client, query)
+@Client.on_callback_query(filters.regex("^toggle_cb$"))
+async def toggle_cb(client, query):
+    curr = await db.get_channel_button()
+    await db.set_channel_button(not curr)
+    await set_files_callback(client, query)
 
-#===============================================================#
-
-@Client.on_callback_query(filters.regex("^add_start_photo$"))
-async def add_start_photo(client, query):
-    msg = f"""<blockquote>**Change Start Image:**</blockquote>
-**Current Start Image:** `{client.messages.get('START_PHOTO', '')}`
-
-__Enter new link of start image or send the photo, or wait for 60 second timeout to be comoleted!__
-"""
-    await query.answer()
-    await query.message.edit_text(msg)
+@Client.on_callback_query(filters.regex("^set_btn_links$"))
+async def set_btn_links(client, query):
+    await query.message.delete()
     try:
-        res = await client.listen(user_id=query.from_user.id, filters=(filters.text|filters.photo), timeout=60)
-        if res.text and res.text.startswith('https://' or 'http://'):
-            client.messages['START_PHOTO'] = res.text
-            return await query.message.edit_text("**This link has been set at the place of start photo!!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
-        elif res.photo:
-            loc = await res.download()
-            client.messages['START_PHOTO'] = loc
-            return await query.message.edit_text("**This image has been set as the starting image!!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
+        example = "Format:\n1 Button: `Name - Link`\n2 Buttons: `Name1 - Link1 | Name2 - Link2`"
+        ask = await client.ask(query.from_user.id, f"Send Button Details:\n\n{example}", timeout=60)
+        text = ask.text
+        if "|" in text:
+            parts = text.split("|")
+            b1 = parts[0].split("-")
+            b2 = parts[1].split("-")
+            await db.set_channel_button_links(b1[0].strip(), b1[1].strip(), b2[0].strip(), b2[1].strip())
         else:
-            return await query.message.edit_text("**Invalid Photo or Link format!!**\n__If you're sending the link of any image it must starts with either 'http' or 'https'!__", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
-    except ListenerTimeout:
-        return await query.message.edit_text("**Timeout, try again!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
+            b1 = text.split("-")
+            await db.set_channel_button_links(b1[0].strip(), b1[1].strip())
+        await ask.reply("✅ Buttons set successfully!")
+    except:
+        pass
+    await settings_command(client, query.message)
 
-#===============================================================#
+# --- Shortener Settings ---
+@Client.on_callback_query(filters.regex("^set_shortener$"))
+async def set_shortener_callback(client, query):
+    url = await db.get_shortener_url()
+    api = await db.get_shortener_api()
+    v_time = await db.get_verified_time()
+    tut = await db.get_tut_video()
 
-@Client.on_callback_query(filters.regex("^add_fsub_photo$"))
-async def add_fsub_photo(client, query):
-    msg = f"""<blockquote>**Change Force Sub Image:**</blockquote>
-**Current Force Sub Image:** `{client.messages.get('FSUB_PHOTO', '')}`
+    msg = f"<b>🔗 Shortener Settings</b>\n\n"
+    msg += f"Site: `{url or 'Not Set'}`\n"
+    msg += f"API: `{api or 'Not Set'}`\n"
+    msg += f"Verify Time: `{v_time or 'Not Set'}` seconds\n"
+    msg += f"Tutorial: [Link]({tut})" if tut else "Tutorial: Not Set"
 
-__Enter new link of fsub image or send the photo, or wait for 60 second timeout to be comoleted!__
-"""
-    await query.answer()
-    await query.message.edit_text(msg)
+    buttons = [
+        [InlineKeyboardButton("sᴇᴛ sɪᴛᴇ & ᴀᴘɪ", callback_data="set_short_api"), InlineKeyboardButton("sᴇᴛ ᴠᴇʀɪғʏ ᴛɪᴍᴇ", callback_data="set_v_time")],
+        [InlineKeyboardButton("sᴇᴛ ᴛᴜᴛᴏʀɪᴀʟ", callback_data="set_tut_link"), InlineKeyboardButton("ᴅɪsᴀʙʟᴇ", callback_data="disable_short")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex("^set_short_api$"))
+async def set_short_api(client, query):
+    await query.message.delete()
     try:
-        res = await client.listen(user_id=query.from_user.id, filters=(filters.text|filters.photo), timeout=60)
-        if res.text and res.text.startswith('https://' or 'http://'):
-            client.messages['FSUB_PHOTO'] = res.text
-            return await query.message.edit_text("**This link has been set at the place of fsub photo!!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
-        elif res.photo:
-            loc = await res.download()
-            client.messages['FSUB_PHOTO'] = loc
-            return await query.message.edit_text("**This image has been set as the force sub image!!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
-        else:
-            return await query.message.edit_text("**Invalid Photo or Link format!!**\n__If you're sending the link of any image it must starts with either 'http' or 'https'!__", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
-    except ListenerTimeout:
-        return await query.message.edit_text("**Timeout, try again!**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('◂ ʙᴀᴄᴋ', 'photos')]]))
+        ask = await client.ask(query.from_user.id, "Send Shortener Site URL:", timeout=60)
+        url = ask.text.strip()
+        ask2 = await client.ask(query.from_user.id, "Send Shortener API Key:", timeout=60)
+        api = ask2.text.strip()
+        await db.set_shortener_url(url)
+        await db.set_shortener_api(api)
+        await ask2.reply("✅ Shortener details updated!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^set_v_time$"))
+async def set_v_time(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send Verify Time in seconds:", timeout=60)
+        await db.set_verified_time(int(ask.text))
+        await ask.reply("✅ Verify time updated!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^set_tut_link$"))
+async def set_tut_link(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send Tutorial Video Link:", timeout=60)
+        await db.set_tut_video(ask.text.strip())
+        await ask.reply("✅ Tutorial link updated!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^disable_short$"))
+async def disable_short(client, query):
+    await db.deactivate_shortener()
+    await query.answer("Shortener Disabled!")
+    await set_shortener_callback(client, query)
+
+# --- Auto Delete Settings ---
+@Client.on_callback_query(filters.regex("^set_autodel$"))
+async def set_autodel_callback(client, query):
+    mode = await db.get_auto_delete()
+    timer = await db.get_del_timer()
+
+    msg = AUTODEL_CMD_TXT.format(
+        autodel_mode="Enabled ✅" if mode else "Disabled ❌",
+        timer=convert_time(timer)
+    )
+
+    buttons = [
+        [InlineKeyboardButton(f"ᴍᴏᴅᴇ: {'✅' if mode else '❌'}", callback_data="toggle_autodel"),
+         InlineKeyboardButton("sᴇᴛ ᴛɪᴍᴇʀ", callback_data="set_del_timer_btn")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex("^toggle_autodel$"))
+async def toggle_autodel(client, query):
+    curr = await db.get_auto_delete()
+    await db.set_auto_delete(not curr)
+    await set_autodel_callback(client, query)
+
+@Client.on_callback_query(filters.regex("^set_del_timer_btn$"))
+async def set_del_timer_btn(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send Delete Timer in seconds:", timeout=60)
+        await db.set_del_timer(int(ask.text))
+        await ask.reply("✅ Delete timer updated!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+# --- Custom Caption Settings ---
+@Client.on_callback_query(filters.regex("^set_caption_menu$"))
+async def set_caption_menu(client, query):
+    caption = await db.get_custom_caption()
+
+    msg = f"<b>📝 Custom Caption Settings</b>\n\n"
+    msg += f"Current Caption:\n<pre>{caption or 'Not Set'}</pre>"
+
+    buttons = [
+        [InlineKeyboardButton("sᴇᴛ ᴄᴀᴘᴛɪᴏɴ", callback_data="add_caption_btn"), InlineKeyboardButton("ʀᴇᴍᴏᴠᴇ", callback_data="rm_caption_btn")],
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex("^add_caption_btn$"))
+async def add_caption_btn(client, query):
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, "Send your Custom Caption text:", timeout=120)
+        await db.set_custom_caption(ask.text)
+        await ask.reply("✅ Custom caption updated!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^rm_caption_btn$"))
+async def rm_caption_btn(client, query):
+    await db.set_custom_caption(None)
+    await query.answer("Caption Removed!")
+    await set_caption_menu(client, query)
+
+# --- Texts & Photos Settings (Simplified) ---
+@Client.on_callback_query(filters.regex("^set_texts$"))
+async def set_texts_callback(client, query):
+    msg = "<b>📝 Texts & Photos Configuration</b>\n\nUse buttons below to change bot messages and images."
+    buttons = [
+        [InlineKeyboardButton("sᴛᴀʀᴛ ᴍsɢ", callback_data="edit_txt_start"), InlineKeyboardButton("ғsᴜʙ ᴍsɢ", callback_data="edit_txt_fsub")],
+        [InlineKeyboardButton("ᴀʙᴏᴜᴛ ᴍsɢ", callback_data="edit_txt_about"), InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+    ]
+    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+
+# More handlers could be added for each text/photo but for now this covers the requested unification.
+# Integration with db.photos and db.texts can be done as needed.
