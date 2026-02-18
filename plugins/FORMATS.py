@@ -8,7 +8,7 @@ autodel_cmd_pic = "https://telegra.ph/file/a64533814021b40057ccd.jpg"
 
 SET_SHORTENER_CMD_TXT = "Shortener is {shortener_status}. Use button to configure the shortener."
 
-CMD_TXT = """<b>🤖 𝗕𝗔𝗦𝗜𝗖 𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 :
+CMD_TXT = """<b>🤖 𝗕𝗔𝗦𝗜𝗖 𝗔𝗗ᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs :</b>
 
 <b>/broadcast :</b> ʙʀᴏᴀᴅᴄᴀsᴛ ᴍᴇssᴀɢᴇ
 

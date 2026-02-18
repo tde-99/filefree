@@ -56,7 +56,7 @@ async def settings_command(client, message):
 
 @Bot.on_callback_query(filters.regex("^settings$"))
 async def settings_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     
     total_fsub = len(await db.get_all_channels())
@@ -87,7 +87,7 @@ async def settings_callback(client, query):
 # --- Force Sub Settings ---
 @Bot.on_callback_query(filters.regex("^set_fsub$"))
 async def set_fsub_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     channels = await db.get_all_channels()
     channel_list = ""
@@ -113,7 +113,7 @@ async def set_fsub_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^toggle_req_fsub$"))
 async def toggle_req_fsub(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     curr = await db.get_request_forcesub()
     await db.set_request_forcesub(not curr)
@@ -163,7 +163,7 @@ async def rm_fsub_callback(client, query):
 # --- Admin & Ban Settings ---
 @Bot.on_callback_query(filters.regex("^set_users$"))
 async def set_users_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     admins = await db.get_all_admins()
     bans = await db.get_ban_users()
@@ -223,7 +223,7 @@ async def rm_admin_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^manage_bans$"))
 async def manage_bans(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     bans = await db.get_ban_users()
     ban_list = f"Total Banned: `{len(bans)}`"
@@ -237,7 +237,7 @@ async def manage_bans(client, query):
 
 @Bot.on_callback_query(filters.regex("^add_ban_btn$"))
 async def add_ban_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -251,7 +251,7 @@ async def add_ban_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^rm_ban_btn$"))
 async def rm_ban_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -266,7 +266,7 @@ async def rm_ban_callback(client, query):
 # --- File Settings ---
 @Bot.on_callback_query(filters.regex("^set_files$"))
 async def set_files_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     protect = await db.get_protect_content()
     hide_caption = await db.get_hide_caption()
@@ -294,7 +294,7 @@ async def set_files_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^toggle_protect$"))
 async def toggle_protect(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     curr = await db.get_protect_content()
     await db.set_protect_content(not curr)
@@ -302,7 +302,7 @@ async def toggle_protect(client, query):
 
 @Bot.on_callback_query(filters.regex("^toggle_hc$"))
 async def toggle_hc(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     curr = await db.get_hide_caption()
     await db.set_hide_caption(not curr)
@@ -310,7 +310,7 @@ async def toggle_hc(client, query):
 
 @Bot.on_callback_query(filters.regex("^toggle_cb$"))
 async def toggle_cb(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     curr = await db.get_channel_button()
     await db.set_channel_button(not curr)
@@ -318,7 +318,7 @@ async def toggle_cb(client, query):
 
 @Bot.on_callback_query(filters.regex("^set_btn_links$"))
 async def set_btn_links(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -341,7 +341,7 @@ async def set_btn_links(client, query):
 # --- Shortener Settings ---
 @Bot.on_callback_query(filters.regex("^set_shortener$"))
 async def set_shortener_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     url = await db.get_shortener_url()
     api = await db.get_shortener_api()
@@ -363,7 +363,7 @@ async def set_shortener_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^set_short_api$"))
 async def set_short_api(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -380,7 +380,7 @@ async def set_short_api(client, query):
 
 @Bot.on_callback_query(filters.regex("^set_v_time$"))
 async def set_v_time(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -393,7 +393,7 @@ async def set_v_time(client, query):
 
 @Bot.on_callback_query(filters.regex("^set_tut_link$"))
 async def set_tut_link(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -406,7 +406,7 @@ async def set_tut_link(client, query):
 
 @Bot.on_callback_query(filters.regex("^disable_short$"))
 async def disable_short(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await db.deactivate_shortener()
     await query.answer("Shortener Disabled!")
@@ -415,7 +415,7 @@ async def disable_short(client, query):
 # --- Auto Delete Settings ---
 @Bot.on_callback_query(filters.regex("^set_autodel$"))
 async def set_autodel_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     mode = await db.get_auto_delete()
     timer = await db.get_del_timer()
@@ -434,7 +434,7 @@ async def set_autodel_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^toggle_autodel$"))
 async def toggle_autodel(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     curr = await db.get_auto_delete()
     await db.set_auto_delete(not curr)
@@ -442,7 +442,7 @@ async def toggle_autodel(client, query):
 
 @Bot.on_callback_query(filters.regex("^set_del_timer_btn$"))
 async def set_del_timer_btn(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -456,7 +456,7 @@ async def set_del_timer_btn(client, query):
 # --- Custom Caption Settings ---
 @Bot.on_callback_query(filters.regex("^set_caption_menu$"))
 async def set_caption_menu(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     caption = await db.get_custom_caption()
 
@@ -471,7 +471,7 @@ async def set_caption_menu(client, query):
 
 @Bot.on_callback_query(filters.regex("^add_caption_btn$"))
 async def add_caption_btn(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.message.delete()
     try:
@@ -484,7 +484,7 @@ async def add_caption_btn(client, query):
 
 @Bot.on_callback_query(filters.regex("^rm_caption_btn$"))
 async def rm_caption_btn(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await db.set_custom_caption(None)
     await query.answer("Caption Removed!")
@@ -493,7 +493,7 @@ async def rm_caption_btn(client, query):
 # --- Texts & Photos Settings (Simplified) ---
 @Bot.on_callback_query(filters.regex("^set_texts$"))
 async def set_texts_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     msg = "<b>📝 Texts & Photos Configuration</b>\n\nUse buttons below to change bot messages and images."
     buttons = [
@@ -504,7 +504,7 @@ async def set_texts_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^edit_txt_start$"))
 async def edit_txt_start(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     msg = await db.get_start_msg() or START_MSG
     await query.message.delete()
@@ -519,7 +519,7 @@ async def edit_txt_start(client, query):
 
 @Bot.on_callback_query(filters.regex("^view_commands$"))
 async def view_commands_callback(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     await query.edit_message_caption(
         caption=CMD_TXT + "\n\n<b>/sync</b> : Sync media from channel\n<b>/settings</b> : Open this menu",
@@ -528,7 +528,7 @@ async def view_commands_callback(client, query):
 
 @Bot.on_callback_query(filters.regex("^edit_txt_fsub$"))
 async def edit_txt_fsub(client, query):
-    if not await is_admin(None, client, query):
+    if not await is_admin(client, query):
         return await query.answer("❌ Access Denied!", show_alert=True)
     msg = await db.get_force_msg() or FORCE_MSG
     await query.message.delete()

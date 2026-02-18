@@ -91,51 +91,56 @@ async def start_command(client: Client, message: Message):
     if not await db.present_user(id):
         await db.add_user(id)
 
-    # Referral system handling
-    if "ref_" in text:
-        try:
-            _, ref_user_id_str = text.split("_", 1)
-            ref_user_id = int(ref_user_id_str)
-            if ref_user_id and ref_user_id != user_id:
-                if not await db.check_referral_exists(user_id):
-                    if await db.add_referral(ref_user_id, user_id):
-                        referral_count = await db.get_referral_count(ref_user_id)
-                        if REFERRAL_COUNT and referral_count > 0 and (referral_count % REFERRAL_COUNT == 0):
-                            await add_premium(ref_user_id, REFERRAL_PREMIUM_DAYS, "d")
-                            try:
-                                await client.send_message(ref_user_id, f"🎉 Cᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! Yᴏᴜ'ᴠᴇ ʀᴇᴄᴇɪᴠᴇᴅ {REFERRAL_PREMIUM_DAYS} ᴅᴀʏs ᴏғ Pʀᴇᴍɪᴜᴍ!")
-                            except: pass
-        except: pass
+    # Deep link payload handling
+    if len(message.command) > 1:
+        payload = message.command[1]
 
-    # Token verification flow
-    if "verify_" in text:
-        try:
-            _, token = text.split("_", 1)
-            if token and verify_status.get("verify_token") == token:
-                await db.update_verify_status(user_id, is_verified=True, verified_time=time.time())
-                expiry_text = get_exp_time(VERIFY_EXPIRE) if VERIFY_EXPIRE else "the configured duration"
-                return await message.reply(f"✅ Token Verified Successfully!\n\n🔑 Valid For: {expiry_text}.", quote=True)
-            else:
-                return await message.reply("⚠️ Invalid/Expired Token. Use /start again.")
-        except: pass
-
-    # Handle get_again triggers
-    for action in ["photo", "video", "batch"]:
-        if text.startswith(f"get_{action}_"):
+        # Referral system handling
+        if payload.startswith("ref_"):
             try:
-                _, user_id_str = text.split("_", 2)
-                if int(user_id_str) == user_id:
-                    if action == "photo": return await get_photo(client, message)
-                    if action == "video": return await get_video(client, message)
-                    if action == "batch": return await get_batch(client, message)
+                _, ref_user_id_str = payload.split("_", 1)
+                ref_user_id = int(ref_user_id_str)
+                if ref_user_id and ref_user_id != user_id:
+                    if not await db.check_referral_exists(user_id):
+                        if await db.add_referral(ref_user_id, user_id):
+                            referral_count = await db.get_referral_count(ref_user_id)
+                            if REFERRAL_COUNT and referral_count > 0 and (referral_count % REFERRAL_COUNT == 0):
+                                await add_premium(ref_user_id, REFERRAL_PREMIUM_DAYS, "d")
+                                try:
+                                    await client.send_message(ref_user_id, f"🎉 Cᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴs! Yᴏᴜ'ᴠᴇ ʀᴇᴄᴇɪᴠᴇᴅ {REFERRAL_PREMIUM_DAYS} ᴅᴀʏs ᴏғ Pʀᴇᴍɪᴜᴍ!")
+                                except: pass
             except: pass
+
+        # Token verification flow
+        elif payload.startswith("verify_"):
+            try:
+                _, token = payload.split("_", 1)
+                if token and verify_status.get("verify_token") == token:
+                    await db.update_verify_status(user_id, is_verified=True, verified_time=time.time())
+                    expiry_text = get_exp_time(VERIFY_EXPIRE) if VERIFY_EXPIRE else "the configured duration"
+                    return await message.reply(f"✅ Token Verified Successfully!\n\n🔑 Valid For: {expiry_text}.", quote=True)
+                else:
+                    return await message.reply("⚠️ Invalid/Expired Token. Use /start again.")
+            except: pass
+
+        # Handle get_again triggers
+        else:
+            for action in ["photo", "video", "batch"]:
+                if payload.startswith(f"get_{action}_"):
+                    try:
+                        _, user_id_str = payload.split("_", 2)
+                        if int(user_id_str) == user_id:
+                            if action == "photo": return await get_photo(client, message)
+                            if action == "video": return await get_video(client, message)
+                            if action == "batch": return await get_batch(client, message)
+                    except: pass
 
     # Welcome message with keyboard
     kb_buttons = [
         [KeyboardButton("Get Photo 📸"), KeyboardButton("Get Batch 📦")],
         [KeyboardButton("Get Video 🍒"), KeyboardButton("Plan Status 🔖")],
     ]
-    if await is_admin(None, client, message):
+    if await is_admin(client, message):
         kb_buttons.append([KeyboardButton("Settings ⚙️")])
 
     reply_kb = ReplyKeyboardMarkup(kb_buttons, resize_keyboard=True)
