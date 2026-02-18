@@ -1,7 +1,5 @@
 import asyncio
 from aiohttp import web
-from flask import Flask
-from threading import Thread
 import os
 import pyromod.listen
 from pyrogram import Client
@@ -17,7 +15,7 @@ from database.database import db
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
 
-# Silence APScheduler logs completely
+# Silence APScheduler logs
 logging.getLogger("apscheduler").setLevel(logging.CRITICAL)
 
 load_dotenv(".env")
@@ -50,11 +48,6 @@ aria2 = aria2p.API(
     )
 )
 
-# Scheduler (shared)
-scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
-scheduler.add_job(remove_expired_users, "interval", seconds=10)
-
-
 class Bot(Client):
     def __init__(self):
         super().__init__(
@@ -66,16 +59,19 @@ class Bot(Client):
             bot_token=TG_BOT_TOKEN
         )
         self.LOGGER = LOGGER
-        self.scheduler = AsyncIOScheduler()
+        self.scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
 
     async def start(self):
         await super().start()
-        scheduler.start()
-        # Schedule daily reset of free usage at midnight IST
+
+        # Schedule jobs
+        self.scheduler.add_job(remove_expired_users, "interval", seconds=60)
         try:
-            scheduler.add_job(db.reset_all_free_usage, 'cron', hour=0, minute=0)
+            self.scheduler.add_job(db.reset_all_free_usage, 'cron', hour=0, minute=0)
         except Exception as e:
             self.LOGGER(__name__).warning(f"Failed to schedule daily free reset: {e}")
+
+        self.scheduler.start()
 
         usr_bot_me = await self.get_me()
         self.uptime = get_indian_time()
@@ -104,13 +100,11 @@ class Bot(Client):
         print(f"Bot Name: {bot_name}")
         print(f"Bot ID: {bot_id}")
         print(f"Channel ID: {CHANNEL_ID}")
-        print(f"Video Range: {MIN_ID} to {MAX_ID} ({len(VIDEOS_RANGE)} videos)")
         print("="*50)
         print("Bot is now active and ready to receive commands!")
         print("="*50 + "\n")
         
         self.LOGGER(__name__).info(f"Bot Running..! Made by @rohit_1888")
-        self.LOGGER(__name__).info(f"Bot Username: @{self.username}")
 
         # Start Web Server
         app = web.AppRunner(await web_server())
@@ -126,7 +120,8 @@ class Bot(Client):
             pass
 
     async def stop(self, *args):
-        self.scheduler.shutdown(wait=False)  
+        if self.scheduler.running:
+            self.scheduler.shutdown(wait=False)
         await super().stop()
         self.LOGGER(__name__).info("Bot stopped.")
 
