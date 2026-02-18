@@ -28,7 +28,7 @@ from plugins.autoDelete import auto_del_notification, delete_message
 from bot import Bot
 from config import *
 from helper_func import *
-from database.database import db, collection
+from database.database import db
 from database.db_premium import *
 from plugins.FORMATS import *
 
@@ -140,7 +140,8 @@ async def start_command(client: Client, message: Message):
     )
 
     referral_link = f"https://telegram.dog/{client.username}?start=ref_{user_id}"
-    caption = START_MSG.format(
+    start_msg_db = await db.get_start_msg()
+    caption = (start_msg_db or START_MSG).format(
         mention=message.from_user.mention,
         id=message.from_user.id,
     ) + f"\n\n🎁 <b>Referral System:</b>\n🔗 Your Link: <code>{referral_link}</code>\n📊 Refer {REFERRAL_COUNT} users = {REFERRAL_PREMIUM_DAYS} Days Premium!"
@@ -191,7 +192,7 @@ async def on_plan_status(client: Client, message: Message):
     free_count = await db.check_free_usage(user_id)
 
     if is_premium:
-        user_data = await collection.find_one({"user_id": user_id})
+        user_data = await db.collection.find_one({"user_id": user_id})
         exp = user_data.get("expiration_timestamp")
         if exp:
             remaining = datetime.fromisoformat(exp).astimezone(IST) - datetime.now(IST)
@@ -354,8 +355,20 @@ async def not_joined(client: Client, message: Message):
                 buttons.append([InlineKeyboardButton(chat.title, url=chat.invite_link or (await client.export_chat_invite_link(chat_id)))])
             except: pass
     buttons.append([InlineKeyboardButton("Close ✖️", callback_data="close")])
-    await message.reply_photo(photo=FORCE_PIC, caption=FORCE_MSG.format(mention=message.from_user.mention), reply_markup=InlineKeyboardMarkup(buttons))
+    force_msg_db = await db.get_force_msg()
+    await message.reply_photo(photo=FORCE_PIC, caption=(force_msg_db or FORCE_MSG).format(mention=message.from_user.mention), reply_markup=InlineKeyboardMarkup(buttons))
 
+
+# --- Admin Sync Command ---
+@Bot.on_message(filters.command("sync") & filters.private & is_admin)
+async def sync_media_command(client: Client, message: Message):
+    msg = await message.reply("🔄 <b>Syncing media from channel...</b>\nThis might take a while depending on the range.", quote=True)
+    try:
+        await store_photos(client)
+        await store_videos(client)
+        await msg.edit("✅ <b>Media synced successfully!</b>")
+    except Exception as e:
+        await msg.edit(f"❌ <b>Sync failed:</b> {e}")
 
 # --- Admin Status Command ---
 @Bot.on_message(filters.command('status') & filters.private & is_admin)

@@ -20,6 +20,33 @@ class Rohit:
             self.dbclient = motor.motor_asyncio.AsyncIOMotorClient(uri)
             self.database = self.dbclient[name]
 
+        self.channel_data = None
+        self.admins_data = None
+        self.user_data = None
+        self.banned_user_data = None
+        self.autho_user_data = None
+        self.shortener_data = None
+        self.settings_data = None
+        self.free_data = None
+        self.for_data = None
+        self.login_data = None
+        self.auto_delete_data = None
+        self.hide_caption_data = None
+        self.protect_content_data = None
+        self.channel_button_data = None
+        self.del_timer_data = None
+        self.channel_button_link_data = None
+        self.custom_caption_data = None
+        self.rqst_fsub_data = None
+        self.rqst_fsub_Channel_data = None
+        self.store_reqLink_data = None
+        self.videos_collection = None
+        self.photos_collection = None
+        self.users_collection = None
+        self.spam_protection_data = None
+        self.referrals_collection = None
+        self.collection = None
+
         if self.database is not None:
             self.channel_data = self.database['channels']
             self.admins_data = self.database['admins']
@@ -564,6 +591,24 @@ class Rohit:
         self._check_db()
         data = await self.custom_caption_data.find_one({"_id": "custom_caption"})
         return data.get("caption") if data else None
+
+    async def set_start_msg(self, msg: str):
+        self._check_db()
+        await self.settings_data.update_one({"_id": "start_msg"}, {"$set": {"message": msg}}, upsert=True)
+
+    async def get_start_msg(self):
+        self._check_db()
+        data = await self.settings_data.find_one({"_id": "start_msg"})
+        return data.get("message") if data else None
+
+    async def set_force_msg(self, msg: str):
+        self._check_db()
+        await self.settings_data.update_one({"_id": "force_msg"}, {"$set": {"message": msg}}, upsert=True)
+
+    async def get_force_msg(self):
+        self._check_db()
+        data = await self.settings_data.find_one({"_id": "force_msg"})
+        return data.get("message") if data else None
 
 # Initialize with fallback for import-time safety
 db = Rohit(DB_URI, DB_NAME)

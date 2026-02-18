@@ -29,7 +29,7 @@ async def authoUser(query, id, owner_only=False):
             return False
         return True
 
-@Bot.on_callback_query()
+@Bot.on_callback_query(filters.regex("^(close|get_again_|about|buy_prem|start)"))
 async def cb_handler(client: Bot, query: CallbackQuery):
     data = query.data
     if data == "close":

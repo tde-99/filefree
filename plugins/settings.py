@@ -19,7 +19,8 @@ async def get_settings_markup():
         [InlineKeyboardButton("ꜰsᴜʙ ᴄʜᴀɴɴᴇʟs", callback_data="set_fsub"), InlineKeyboardButton("ᴀᴅᴍɪɴs & ʙᴀɴs", callback_data="set_users")],
         [InlineKeyboardButton("ғɪʟᴇ sᴇᴛᴛɪɴɢs", callback_data="set_files"), InlineKeyboardButton("sʜᴏʀᴛᴇɴᴇʀ", callback_data="set_shortener")],
         [InlineKeyboardButton("ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ", callback_data="set_autodel"), InlineKeyboardButton("ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ", callback_data="set_caption_menu")],
-        [InlineKeyboardButton("ᴛᴇxᴛs & ᴘʜᴏᴛᴏs", callback_data="set_texts"), InlineKeyboardButton("ᴄʟᴏsᴇ ✖️", callback_data="close")]
+        [InlineKeyboardButton("ᴛᴇxᴛs & ᴘʜᴏᴛᴏs", callback_data="set_texts"), InlineKeyboardButton("ᴄᴏᴍᴍᴀɴᴅs 📜", callback_data="view_commands")],
+        [InlineKeyboardButton("ᴄʟᴏsᴇ ✖️", callback_data="close")]
     ]
     return InlineKeyboardMarkup(buttons)
 
@@ -76,7 +77,7 @@ async def settings_callback(client, query):
         reqfsub=reqfsub
     )
     
-    await query.message.edit_caption(
+    await query.edit_message_caption(
         caption=msg,
         reply_markup=await get_settings_markup()
     )
@@ -104,7 +105,7 @@ async def set_fsub_callback(client, query):
         [InlineKeyboardButton("ᴛᴏɢɢʟᴇ ʀᴇǫᴜᴇsᴛ ᴍᴏᴅᴇ", callback_data="toggle_req_fsub")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^toggle_req_fsub$"))
 async def toggle_req_fsub(client, query):
@@ -167,7 +168,7 @@ async def set_users_callback(client, query):
         [InlineKeyboardButton("ᴍᴀɴᴀɢᴇ ᴀᴅᴍɪɴs", callback_data="manage_admins"), InlineKeyboardButton("ᴍᴀɴᴀɢᴇ ʙᴀɴs", callback_data="manage_bans")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^manage_admins$"))
 async def manage_admins(client, query):
@@ -182,7 +183,7 @@ async def manage_admins(client, query):
         [InlineKeyboardButton("ᴀᴅᴅ ᴀᴅᴍɪɴ", callback_data="add_admin_btn"), InlineKeyboardButton("ʀᴇᴍᴏᴠᴇ ᴀᴅᴍɪɴ", callback_data="rm_admin_btn")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="set_users")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^add_admin_btn$"))
 async def add_admin_callback(client, query):
@@ -218,7 +219,7 @@ async def manage_bans(client, query):
         [InlineKeyboardButton("ʙᴀɴ ᴜsᴇʀ", callback_data="add_ban_btn"), InlineKeyboardButton("ᴜɴʙᴀɴ ᴜsᴇʀ", callback_data="rm_ban_btn")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="set_users")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^add_ban_btn$"))
 async def add_ban_callback(client, query):
@@ -269,7 +270,7 @@ async def set_files_callback(client, query):
          InlineKeyboardButton("sᴇᴛ ʙᴜᴛᴛᴏɴs", callback_data="set_btn_links")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^toggle_protect$"))
 async def toggle_protect(client, query):
@@ -328,7 +329,7 @@ async def set_shortener_callback(client, query):
         [InlineKeyboardButton("sᴇᴛ ᴛᴜᴛᴏʀɪᴀʟ", callback_data="set_tut_link"), InlineKeyboardButton("ᴅɪsᴀʙʟᴇ", callback_data="disable_short")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^set_short_api$"))
 async def set_short_api(client, query):
@@ -389,7 +390,7 @@ async def set_autodel_callback(client, query):
          InlineKeyboardButton("sᴇᴛ ᴛɪᴍᴇʀ", callback_data="set_del_timer_btn")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^toggle_autodel$"))
 async def toggle_autodel(client, query):
@@ -420,7 +421,7 @@ async def set_caption_menu(client, query):
         [InlineKeyboardButton("sᴇᴛ ᴄᴀᴘᴛɪᴏɴ", callback_data="add_caption_btn"), InlineKeyboardButton("ʀᴇᴍᴏᴠᴇ", callback_data="rm_caption_btn")],
         [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_callback_query(filters.regex("^add_caption_btn$"))
 async def add_caption_btn(client, query):
@@ -445,9 +446,39 @@ async def set_texts_callback(client, query):
     msg = "<b>📝 Texts & Photos Configuration</b>\n\nUse buttons below to change bot messages and images."
     buttons = [
         [InlineKeyboardButton("sᴛᴀʀᴛ ᴍsɢ", callback_data="edit_txt_start"), InlineKeyboardButton("ғsᴜʙ ᴍsɢ", callback_data="edit_txt_fsub")],
-        [InlineKeyboardButton("ᴀʙᴏᴜᴛ ᴍsɢ", callback_data="edit_txt_about"), InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
+        [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]
     ]
-    await query.message.edit_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
+    await query.edit_message_caption(caption=msg, reply_markup=InlineKeyboardMarkup(buttons))
 
-# More handlers could be added for each text/photo but for now this covers the requested unification.
-# Integration with db.photos and db.texts can be done as needed.
+@Client.on_callback_query(filters.regex("^edit_txt_start$"))
+async def edit_txt_start(client, query):
+    msg = await db.get_start_msg() or START_MSG
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, f"<b>Current Start Message:</b>\n\n<code>{msg}</code>\n\nSend a new message to change it:", timeout=300)
+        if ask.text:
+            await db.set_start_msg(ask.text)
+            await ask.reply("✅ Start Message updated!")
+    except:
+        pass
+    await settings_command(client, query.message)
+
+@Client.on_callback_query(filters.regex("^view_commands$"))
+async def view_commands_callback(client, query):
+    await query.edit_message_caption(
+        caption=CMD_TXT + "\n\n<b>/sync</b> : Sync media from channel\n<b>/settings</b> : Open this menu",
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="settings")]])
+    )
+
+@Client.on_callback_query(filters.regex("^edit_txt_fsub$"))
+async def edit_txt_fsub(client, query):
+    msg = await db.get_force_msg() or FORCE_MSG
+    await query.message.delete()
+    try:
+        ask = await client.ask(query.from_user.id, f"<b>Current Force Sub Message:</b>\n\n<code>{msg}</code>\n\nSend a new message to change it:", timeout=300)
+        if ask.text:
+            await db.set_force_msg(ask.text)
+            await ask.reply("✅ Force Sub Message updated!")
+    except:
+        pass
+    await settings_command(client, query.message)

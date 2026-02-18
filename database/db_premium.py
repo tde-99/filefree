@@ -1,12 +1,12 @@
-from database.database import collection
+from database.database import db
 from pytz import timezone
 from datetime import datetime, timedelta
 
-# collection is already imported from database.database and is a motor collection
+# db.collection is the motor collection
 
 # Check if the user is a premium user (active only)
 async def is_premium_user(user_id):
-    user = await collection.find_one({"user_id": user_id})
+    user = await db.collection.find_one({"user_id": user_id})
     if not user:
         return False
 
@@ -28,19 +28,19 @@ async def is_premium_user(user_id):
 
 # Remove premium user
 async def remove_premium(user_id):
-    await collection.delete_one({"user_id": user_id})
+    await db.collection.delete_one({"user_id": user_id})
 
 
 # Remove expired users
 async def remove_expired_users():
     current_time = datetime.now().isoformat()
-    await collection.delete_many({"expiration_timestamp": {"$lte": current_time}})
+    await db.collection.delete_many({"expiration_timestamp": {"$lte": current_time}})
 
 
 # List active premium users
 async def list_premium_users():
     ist = timezone("Asia/Kolkata")
-    premium_users = collection.find({})
+    premium_users = db.collection.find({})
     premium_user_list = []
 
     async for user in premium_users:
@@ -87,7 +87,7 @@ async def add_premium(user_id, time_value, time_unit):
         "expiration_timestamp": expiration_time.isoformat(),
     }
 
-    await collection.update_one(
+    await db.collection.update_one(
         {"user_id": user_id},
         {"$set": premium_data},
         upsert=True
@@ -100,7 +100,7 @@ async def add_premium(user_id, time_value, time_unit):
 
 # Check user plan (Premium / Not Premium)
 async def check_user_plan(user_id):
-    user = await collection.find_one({"user_id": user_id})
+    user = await db.collection.find_one({"user_id": user_id})
     if not user:
         return "❌ Yᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀ Pʀᴇᴍɪᴜᴍ Usᴇʀ."
 

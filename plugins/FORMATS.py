@@ -1,3 +1,5 @@
+from config import START_MSG, FORCE_MSG
+
 on_pic = "https://telegra.ph/file/5593d624d11d92bceb48e.jpg"
 off_pic = "https://telegra.ph/file/0d9e590f62b63b51d4bf9.jpg"
 files_cmd_pic = "https://telegra.ph/file/d44f46054250a73053614.jpg"
@@ -5,21 +7,6 @@ autodel_cmd_pic = "https://telegra.ph/file/a64533814021b40057ccd.jpg"
 
 
 SET_SHORTENER_CMD_TXT = "Shortener is {shortener_status}. Use button to configure the shortener."
-
-#start message
-START_MSG = """Hello {mention}
-
-I can Download terabox files and having Advanced features 😎 ."""
-
-
-#Force sub message 
-FORCE_MSG =  """Hello {mention}
-
-<b>You need to join in my Channel/Group to use me
-
-Kindly Please join Channel...
-
-❗Fᴀᴄɪɴɢ ᴘʀᴏʙʟᴇᴍs, ᴜsᴇ: /help</b>"""
 
 CMD_TXT = """<b>🤖 𝗕𝗔𝗦𝗜𝗖 𝗔𝗗𝗠𝗜𝗡 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 :
 
@@ -92,7 +79,7 @@ FSUB_CMD_TXT = """<b>🤖 𝗙𝗢𝗥𝗖𝗘 𝗦𝗨𝗕 𝗖𝗢𝗠𝗠𝗔
 
 
 USER_CMD_TXT = """<b>🤖 𝗨𝗦𝗘𝗥 𝗦𝗘𝗧𝗧𝗜𝗡𝗚 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 :</b>
-    
+
 <b>/admin_list</b> : ᴠɪᴇᴡ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴀᴅᴍɪɴ ʟɪsᴛ (ᴏᴡɴᴇʀ)
 
 <b>/add_admins</b> : ᴀᴅᴅ ᴏɴᴇ ᴏʀ ᴍᴜʟᴛɪᴘʟᴇ ᴜsᴇʀ ɪᴅs ᴀs ᴀᴅᴍɪɴ (ᴏᴡɴᴇʀ)
@@ -121,7 +108,7 @@ RFSUB_MS_TXT = """<b>🤖 𝗥𝗘𝗤𝗨𝗘𝗦𝗧 𝗙𝗦𝗨𝗕 𝗟𝗜
 
 CLEAR_USERS_TXT = """<blockquote expandable><b>What is the use of Clear Users !?</b>
 
-➪ Cʟᴇᴀʀ Usᴇʀs ɪs ᴜsᴇᴅ ᴛᴏ ᴄʟᴇᴀʀ ᴛʜᴇ ᴀʟʟ ᴜsᴇʀ ᴅᴀᴛᴀ ᴏғ ᴀ sᴘᴇᴄɪғɪᴇᴅ Rᴇǫᴜᴇsᴛ ғᴏʀᴄᴇsᴜʙ cʜᴀɴɴᴇʟ ɪᴅ. 
+➪ Cʟᴇᴀʀ Usᴇʀs ɪs ᴜsᴇᴅ ᴛᴏ ᴄʟᴇᴀʀ ᴛʜᴇ ᴀʟʟ ᴜsᴇʀ ᴅᴀᴛᴀ ᴏғ ᴀ sᴘᴇᴄɪғɪᴇᴅ Rᴇǫᴜᴇsᴛ ғᴏʀᴄᴇsᴜʙ cʜᴀɴɴᴇʟ ɪᴅ.
 
 ➪ Hᴇʀᴇ oɴʟʏ usᴇʀ ᴅᴀᴛᴀ ɪs ᴅᴇʟᴇᴛᴇᴅ ғʀᴏᴍ sᴘᴇᴄɪғɪᴇᴅ ᴄʜᴀɴɴᴇʟ.</blockquote>
 
@@ -130,7 +117,7 @@ CLEAR_USERS_TXT = """<blockquote expandable><b>What is the use of Clear Users !?
 
 CLEAR_CHNLS_TXT = """<blockquote expandable><b>What is the use of Clear Channels !?</b>
 
-➪ Cʟᴇᴀʀ Cʜᴀɴɴᴇʟs ᴜsᴇᴅ ᴛᴏ Dᴇʟᴇᴛᴇ ᴀʟʟ ᴜsᴇʀ ᴅᴀᴛᴀ ᴀʟᴏɴɢ ᴡɪᴛʜ Rᴇǫᴜᴇsᴛ ғᴏʀᴄᴇsᴜʙ ᴄʜᴀɴɴᴇʟ ɪᴅ ᴀɴᴅ ʟɪɴᴋ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ. 
+➪ Cʟᴇᴀʀ Cʜᴀɴɴᴇʟs ᴜsᴇᴅ ᴛᴏ Dᴇʟᴇᴛᴇ ᴀʟʟ ᴜsᴇʀ ᴅᴀᴛᴀ ᴀʟᴏɴɢ ᴡɪᴛʜ Rᴇǫᴜᴇsᴛ ғᴏʀᴄᴇsᴜʙ ᴄʜᴀɴɴᴇʟ ɪᴅ ᴀɴᴅ ʟɪɴᴋ ғʀᴏᴍ ᴅᴀᴛᴀʙᴀsᴇ.
 
 ➪ Hᴇʀᴇ ᴀʟʟ ᴅᴀᴛᴀ ʀᴇᴀʟᴛᴇᴅ ᴛᴏ ʀᴇǫᴜᴇsᴛ ғᴏʀᴄᴇsᴜʙ ᴄʜᴀɴɴᴇʟ ɪᴅ ᴅᴇʟᴇᴛᴇᴅ Pᴇʀᴍᴀɴᴇɴᴛʟʏ...
 
@@ -141,16 +128,16 @@ CLEAR_CHNLS_TXT = """<blockquote expandable><b>What is the use of Clear Channels
 
 CLEAR_LINKS_TXT = """<blockquote expandable><b>What is the use of Clear Links !?</b>
 
-➪ Cʟᴇᴀʀ Sᴛᴏʀᴇᴅ Rᴇǫᴜᴇsᴛ Lɪɴᴋs ᴜsᴇᴅ ᴛᴏ Dᴇʟᴇᴛᴇ Lɪɴᴋs ᴏғ ᴀ sᴘᴇᴄɪғɪᴇᴅ ᴄʜᴀɴɴᴇʟ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ ᴀs ᴡᴇʟʟ ᴀs ʀᴇᴠᴏᴋᴇ ᴛʜᴇ ʟɪɴᴋ ғʀᴏᴍ ᴛʜᴀᴛ Cʜᴀɴɴᴇʟ. 
+➪ Cʟᴇᴀʀ Sᴛᴏʀᴇᴅ Rᴇǫᴜᴇsᴛ Lɪɴᴋs ᴜsᴇᴅ ᴛᴏ Dᴇʟᴇᴛᴇ Lɪɴᴋs ᴏғ ᴀ sᴘᴇᴄɪғɪᴇᴅ ᴄʜᴀɴɴᴇʟ ɪɴ ᴅᴀᴛᴀʙᴀsᴇ ᴀs ᴡᴇʟʟ ᴀs ʀᴇᴠᴏᴋᴇ ᴛʜᴇ ʟɪɴᴋ ғʀᴏᴍ ᴛʜᴀᴛ Cʜᴀɴɴᴇʟ.
 
-➪ Eᴠᴇɴ ɪғ ᴄʟᴇᴀʀɪɴɢ ᴄʜᴀɴɴᴇʟ ᴅᴀᴛᴀ ᴛʜᴇ Rᴇǫᴜᴇsᴛ Lɪɴᴋ sᴛᴏʀᴇᴅ ᴏɴ ᴅᴀᴛᴀʙᴀsᴇ ғᴏʀ ғᴜᴛᴜʀᴇ ᴜsɪɴɢ ᴏғ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ, 
+➪ Eᴠᴇɴ ɪғ ᴄʟᴇᴀʀɪɴɢ ᴄʜᴀɴɴᴇʟ ᴅᴀᴛᴀ ᴛʜᴇ Rᴇǫᴜᴇsᴛ Lɪɴᴋ sᴛᴏʀᴇᴅ ᴏɴ ᴅᴀᴛᴀʙᴀsᴇ ғᴏʀ ғᴜᴛᴜʀᴇ ᴜsɪɴɢ ᴏғ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ,
 
-➪ Bʏ ᴅᴇʟᴇᴛɪɴɢ ʀᴇǫᴜᴇsᴛ ʟɪɴᴋ ᴏғ sᴘᴇᴄɪғɪᴇᴅ ᴄʜᴀɴɴᴇʟ ᴛʜᴇ ʟɪɴᴋ ᴡɪʟʟ ʙᴇ ʀᴇᴠᴏᴋᴇᴅ ғʀᴏᴍ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ɴᴏᴛ ᴜsᴀʙʟᴇ ᴀɴʏ ᴍᴏʀᴇ, 
+➪ Bʏ ᴅᴇʟᴇᴛɪɴɢ ʀᴇǫᴜᴇsᴛ ʟɪɴᴋ ᴏғ sᴘᴇᴄɪғɪᴇᴅ ᴄʜᴀɴɴᴇʟ ᴛʜᴇ ʟɪɴᴋ ᴡɪʟʟ ʙᴇ ʀᴇᴠᴏᴋᴇᴅ ғʀᴏᴍ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ɴᴏᴛ ᴜsᴀʙʟᴇ ᴀɴʏ ᴍᴏʀᴇ,
 
 ➪ Sᴏ ᴛʜᴇ ʙᴏᴛ ᴡɪʟʟ ʜᴀᴠᴇ ᴛᴏ ᴄʀᴇᴀᴛᴇ ᴀɢᴀɪɴ ʀᴇǫᴜᴇsᴛ ʟɪɴᴋ ᴏғ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ ɪɴ ғᴜᴛᴜʀᴇ ɪғ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ ᴀɢᴀɪɴ ᴀᴅᴅᴇᴅ ᴀs ʀᴇǫᴜᴇsᴛ ғᴏʀᴄᴇsᴜʙ ᴄʜᴀɴɴᴇʟ.
 
-<b>⚠️ NOTE:</b> 
-‣ Tᴏ ᴘᴇʀғᴏʀᴍ ᴛʜɪs ᴀᴄᴛɪᴏɴ ᴛʜᴇ ʙᴏᴛ sʜᴏᴜʟᴅ ʜᴀᴠᴇ ᴀᴅᴍɪɴ ᴀʟᴏɴɢ ᴡɪᴛʜ ᴘʀᴏᴘᴇʀ ᴘᴇʀᴍɪssɪᴏɴ ᴏɴ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ. 
+<b>⚠️ NOTE:</b>
+‣ Tᴏ ᴘᴇʀғᴏʀᴍ ᴛʜɪs ᴀᴄᴛɪᴏɴ ᴛʜᴇ ʙᴏᴛ sʜᴏᴜʟᴅ ʜᴀᴠᴇ ᴀᴅᴍɪɴ ᴀʟᴏɴɢ ᴡɪᴛʜ ᴘʀᴏᴘᴇʀ ᴘᴇʀᴍɪssɪᴏɴ ᴏɴ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ.
 
 ‣ ɪғ ᴛʜᴇ ʙᴏᴛ ɴᴏᴛ ɪɴ ᴛʜᴀᴛ ᴄʜᴀɴɴᴇʟ ᴏʀ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ ᴛʜᴇɴ ᴛʜɪs ᴏᴘᴇʀᴀᴛɪᴏɴ ᴄᴀɴ'ᴛ ʙᴇ ᴘᴇʀғᴏʀᴍᴇᴅ.</blockquote>
 
