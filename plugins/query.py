@@ -2,7 +2,7 @@ import random
 import logging
 import asyncio
 from bot import Bot
-from pyrogram import __version__
+from pyrogram import __version__, filters
 from pyrogram.enums import ParseMode
 from plugins.FORMATS import *
 from config import *

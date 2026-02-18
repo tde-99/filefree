@@ -63,6 +63,7 @@ CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>{file_name}</b>")
 MIN_ID = get_int("MIN_ID", "1")
 MAX_ID = get_int("MAX_ID", "1000")
 VIDEOS_RANGE = range(MIN_ID, MAX_ID + 1)
+USER_REPLY_TEXT = os.environ.get('USER_REPLY_TEXT', 'Send a valid Terabox link to download.')
 
 # --- Logging --- #
 logging.basicConfig(
