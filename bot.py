@@ -18,7 +18,10 @@ import logging
 # Silence APScheduler logs
 logging.getLogger("apscheduler").setLevel(logging.CRITICAL)
 
-load_dotenv(".env")
+# Explicitly load .env from the current directory if it exists
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)
 
 routes = web.RouteTableDef()
 
@@ -62,6 +65,20 @@ class Bot(Client):
         self.scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
 
     async def start(self):
+        # --- Database Health Check --- #
+        try:
+            db._check_db()
+            # Try a simple operation to verify connection
+            await db.dbclient.server_info()
+            print("✅ Database connected successfully!")
+        except Exception as e:
+            self.LOGGER(__name__).critical(f"❌ Database connection failed: {e}")
+            print("\n" + "="*50)
+            print("CRITICAL: DATABASE NOT CONNECTED")
+            print("Please check your DB_URI in configuration.")
+            print("="*50 + "\n")
+            sys.exit(1)
+
         await super().start()
 
         # Schedule jobs
@@ -128,14 +145,17 @@ class Bot(Client):
     def run(self):
         """Run the bot."""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.start())
-        self.LOGGER(__name__).info("Bot is now running. Thanks to @rohit_1888")
         try:
+            loop.run_until_complete(self.start())
+            self.LOGGER(__name__).info("Bot is now running. Thanks to @rohit_1888")
             loop.run_forever()
         except KeyboardInterrupt:
             self.LOGGER(__name__).info("Shutting down...")
+        except SystemExit:
+            self.LOGGER(__name__).info("Exiting...")
         finally:
-            loop.run_until_complete(self.stop())
+            if loop.is_running():
+                loop.run_until_complete(self.stop())
 
 
 if __name__ == "__main__":

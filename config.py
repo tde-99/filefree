@@ -2,7 +2,12 @@ import os
 import logging
 from dotenv import load_dotenv
 
-load_dotenv()
+# Explicitly load .env from the current directory
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    load_dotenv() # Fallback to default
 
 def get_int(key, default="0"):
     val = os.environ.get(key, default)
@@ -56,6 +61,13 @@ logging.basicConfig(
 )
 LOGGER = logging.getLogger
 
-# --- Validation --- #
-if not all([API_HASH, APP_ID, TG_BOT_TOKEN, DB_URI]):
-    logging.warning("One or more essential environment variables are missing (API_HASH, APP_ID, TG_BOT_TOKEN, DB_URI). The bot may not start correctly.")
+# --- Essential Validation --- #
+missing = []
+if not API_HASH: missing.append("API_HASH")
+if not APP_ID: missing.append("APP_ID")
+if not TG_BOT_TOKEN: missing.append("TG_BOT_TOKEN")
+if not DB_URI: missing.append("DB_URI")
+
+if missing:
+    logging.critical(f"Missing essential configuration: {', '.join(missing)}")
+    logging.critical("Please set these in your environment or .env file.")

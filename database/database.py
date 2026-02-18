@@ -8,28 +8,11 @@ from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO)
 
-# Validate DB_URI
-if not DB_URI:
-    logging.critical("DB_URI is missing! The bot cannot connect to MongoDB. Please set DB_URI in your environment or .env file.")
-    # We will raise an error if someone tries to use the database
-    dbclient = None
-    database = None
-    collection = None
-else:
-    dbclient = motor.motor_asyncio.AsyncIOMotorClient(DB_URI)
-    database = dbclient[DB_NAME]
-    collection = database['premium-users']
-
-default_verify = {
-    'is_verified': False,
-    'verified_time': 0,
-    'verify_token': "",
-    'link': ""
-}
-
 class Rohit:
 
     def __init__(self, uri, name):
+        self.uri = uri
+        self.name = name
         if not uri:
             self.dbclient = None
             self.database = None
@@ -63,10 +46,11 @@ class Rohit:
             self.users_collection = self.database["user_subs"]
             self.spam_protection_data = self.database["spam_protection"]
             self.referrals_collection = self.database["referrals"]
+            self.collection = self.database['premium-users'] # For compatibility with db_premium
 
     def _check_db(self):
-        if self.database is None:
-            raise RuntimeError("Database not initialized. Check your DB_URI.")
+        if not self.uri or self.database is None:
+            raise RuntimeError("Database not initialized. Check your DB_URI in configuration.")
 
     # Shortener Token
     async def set_shortener_url(self, url):
@@ -128,6 +112,7 @@ class Rohit:
         except Exception as e:
             logging.error(f"Error fetching shortener API key: {e}")
             return None
+
 
     async def deactivate_shortener(self):
         self._check_db()
@@ -204,6 +189,12 @@ class Rohit:
     # VERIFICATION MANAGEMENT
     async def get_verify_status(self, user_id):
         self._check_db()
+        default_verify = {
+            'is_verified': False,
+            'verified_time': 0,
+            'verify_token': "",
+            'link': ""
+        }
         user = await self.user_data.find_one({'_id': user_id})
         if user:
             return user.get('verify_status', default_verify)
@@ -332,6 +323,7 @@ class Rohit:
         users_docs = await self.admins_data.find().to_list(length=None)
         return [doc['_id'] for doc in users_docs]
 
+
     # BAN USER MANAGEMENT
     async def ban_user_exist(self, user_id: int):
         self._check_db()
@@ -350,6 +342,7 @@ class Rohit:
         self._check_db()
         users_docs = await self.banned_user_data.find().to_list(length=None)
         return [doc['_id'] for doc in users_docs]
+
 
     # REQUEST FORCE-SUB MANAGEMENT
     async def add_reqChannel(self, channel_id: int):
@@ -429,6 +422,7 @@ class Rohit:
     async def del_stored_reqLink(self, channel_id: int):
         self._check_db()
         await self.store_reqLink_data.delete_one({'_id': channel_id})
+
 
     # FREE USAGE SETTINGS
     async def get_free_settings(self):
@@ -573,3 +567,5 @@ class Rohit:
 
 # Initialize with fallback for import-time safety
 db = Rohit(DB_URI, DB_NAME)
+# Compatibility exports
+collection = db.collection if db.database is not None else None
