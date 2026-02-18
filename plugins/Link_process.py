@@ -60,11 +60,12 @@ async def update_bot(client, message):
     'start', 'users', 'broadcast', 'stats', 'addpaid', 'removepaid', 'listpaid',
     'help', 'add_fsub', 'fsub_chnl', 'restart', 'del_fsub', 'add_admins', 'del_admins', 
     'admin_list', 'cancel', 'auto_del', 'forcesub', 'files', 'add_banuser', 'token', 'del_banuser', 'banuser_list', 
-    'status', 'req_fsub', 'myplan', 'short', 'check', 'free', 'set_free_limit', 'update', 'status', 'genlink', 'batch', 'custom_batch', 'referral'])# ✅ ADD EXCEPTION FOR BUTTON TEXTS
+    'status', 'req_fsub', 'myplan', 'short', 'check', 'free', 'set_free_limit', 'update', 'status', 'genlink', 'batch', 'custom_batch', 'referral', 'settings'])# ✅ ADD EXCEPTION FOR BUTTON TEXTS
     & ~filters.regex("^Get Video 🍒$")
     & ~filters.regex("^Get Photo 📸$")
     & ~filters.regex("^Get Batch 📦$")
     & ~filters.regex("^Plan Status 🔖$")
+    & ~filters.regex("^Settings ⚙️$")
     )
 async def handle_message(client: Client, message: Message):
     user_id = message.from_user.id

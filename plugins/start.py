@@ -131,13 +131,14 @@ async def start_command(client: Client, message: Message):
             except: pass
 
     # Welcome message with keyboard
-    reply_kb = ReplyKeyboardMarkup(
-        [
-            [KeyboardButton("Get Photo 📸"), KeyboardButton("Get Batch 📦")],
-            [KeyboardButton("Get Video 🍒"), KeyboardButton("Plan Status 🔖")],
-        ],
-        resize_keyboard=True,
-    )
+    kb_buttons = [
+        [KeyboardButton("Get Photo 📸"), KeyboardButton("Get Batch 📦")],
+        [KeyboardButton("Get Video 🍒"), KeyboardButton("Plan Status 🔖")],
+    ]
+    if await is_admin(None, client, message):
+        kb_buttons.append([KeyboardButton("Settings ⚙️")])
+
+    reply_kb = ReplyKeyboardMarkup(kb_buttons, resize_keyboard=True)
 
     referral_link = f"https://telegram.dog/{client.username}?start=ref_{user_id}"
     start_msg_db = await db.get_start_msg()
@@ -228,20 +229,28 @@ async def on_get_batch(client: Client, message: Message):
 # --- Media Handlers ---
 async def store_videos(app: Client):
     all_videos = []
-    messages = await try_until_get(app.get_messages(CHANNEL_ID, VIDEOS_RANGE))
-    for msg in messages:
-        if msg and msg.video:
-            if not await db.video_exists(msg.video.file_id):
-                all_videos.append({"file_id": msg.video.file_id})
+    # Batch get_messages as Pyrogram limits to 200 IDs
+    ids = list(VIDEOS_RANGE)
+    for i in range(0, len(ids), 200):
+        batch_ids = ids[i:i+200]
+        messages = await try_until_get(app.get_messages(CHANNEL_ID, batch_ids))
+        for msg in messages:
+            if msg and msg.video:
+                if not await db.video_exists(msg.video.file_id):
+                    all_videos.append({"file_id": msg.video.file_id})
     if all_videos: await db.insert_videos(all_videos)
 
 async def store_photos(app: Client):
     all_photos = []
-    messages = await try_until_get(app.get_messages(CHANNEL_ID, VIDEOS_RANGE))
-    for msg in messages:
-        if msg and msg.photo:
-            if not await db.photo_exists(msg.photo.file_id):
-                all_photos.append({"file_id": msg.photo.file_id})
+    # Batch get_messages as Pyrogram limits to 200 IDs
+    ids = list(VIDEOS_RANGE)
+    for i in range(0, len(ids), 200):
+        batch_ids = ids[i:i+200]
+        messages = await try_until_get(app.get_messages(CHANNEL_ID, batch_ids))
+        for msg in messages:
+            if msg and msg.photo:
+                if not await db.photo_exists(msg.photo.file_id):
+                    all_photos.append({"file_id": msg.photo.file_id})
     if all_photos: await db.insert_photos(all_photos)
 
 async def send_random_video(client, chat_id, protect=True, caption="", reply_markup=None, hide_caption=False):
@@ -263,6 +272,20 @@ async def get_photo(client: Client, message: Message):
 
     is_prem = await is_premium_user(user_id)
     if not is_prem:
+        # Check verify status
+        verify_status = await db.get_verify_status(user_id) or {}
+        if not verify_status.get("is_verified"):
+            shortener_url = await db.get_shortener_url()
+            shortener_api = await db.get_shortener_api()
+            if shortener_url and shortener_api:
+                token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+                await db.update_verify_status(user_id, verify_token=token)
+                long_url = f"https://telegram.dog/{client.username}?start=verify_{token}"
+                short_link = await get_shortlink(long_url)
+                tut_vid_url = await db.get_tut_video() or TUT_VID
+                btn = [[InlineKeyboardButton("Click here", url=short_link), InlineKeyboardButton('How to use', url=tut_vid_url)], [InlineKeyboardButton('BUY PREMIUM', callback_data='buy_prem')]]
+                return await message.reply("Your ads token is expired. Verify to access files.", reply_markup=InlineKeyboardMarkup(btn), quote=True)
+
         free_limit = await db.get_free_limit(user_id)
         if await db.check_free_usage(user_id) >= free_limit:
             return await message.reply_text("Free limit reached.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Buy Premium", callback_data="buy_prem")]]))
@@ -285,6 +308,20 @@ async def get_video(client: Client, message: Message):
 
     is_prem = await is_premium_user(user_id)
     if not is_prem:
+        # Check verify status
+        verify_status = await db.get_verify_status(user_id) or {}
+        if not verify_status.get("is_verified"):
+            shortener_url = await db.get_shortener_url()
+            shortener_api = await db.get_shortener_api()
+            if shortener_url and shortener_api:
+                token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+                await db.update_verify_status(user_id, verify_token=token)
+                long_url = f"https://telegram.dog/{client.username}?start=verify_{token}"
+                short_link = await get_shortlink(long_url)
+                tut_vid_url = await db.get_tut_video() or TUT_VID
+                btn = [[InlineKeyboardButton("Click here", url=short_link), InlineKeyboardButton('How to use', url=tut_vid_url)], [InlineKeyboardButton('BUY PREMIUM', callback_data='buy_prem')]]
+                return await message.reply("Your ads token is expired. Verify to access files.", reply_markup=InlineKeyboardMarkup(btn), quote=True)
+
         free_limit = await db.get_free_limit(user_id)
         if await db.check_free_usage(user_id) >= free_limit:
             return await message.reply_text("Free limit reached.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Buy Premium", callback_data="buy_prem")]]))
@@ -307,6 +344,20 @@ async def get_batch(client: Client, message: Message):
 
     is_prem = await is_premium_user(user_id)
     if not is_prem:
+        # Check verify status
+        verify_status = await db.get_verify_status(user_id) or {}
+        if not verify_status.get("is_verified"):
+            shortener_url = await db.get_shortener_url()
+            shortener_api = await db.get_shortener_api()
+            if shortener_url and shortener_api:
+                token = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+                await db.update_verify_status(user_id, verify_token=token)
+                long_url = f"https://telegram.dog/{client.username}?start=verify_{token}"
+                short_link = await get_shortlink(long_url)
+                tut_vid_url = await db.get_tut_video() or TUT_VID
+                btn = [[InlineKeyboardButton("Click here", url=short_link), InlineKeyboardButton('How to use', url=tut_vid_url)], [InlineKeyboardButton('BUY PREMIUM', callback_data='buy_prem')]]
+                return await message.reply("Your ads token is expired. Verify to access files.", reply_markup=InlineKeyboardMarkup(btn), quote=True)
+
         free_limit = await db.get_free_limit(user_id)
         if await db.check_free_usage(user_id) >= free_limit:
             return await message.reply_text("Free limit reached.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Buy Premium", callback_data="buy_prem")]]))

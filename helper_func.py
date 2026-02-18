@@ -35,7 +35,9 @@ async def check_banUser(filter, client, update):
 async def check_admin(filter, client, update):
     try:
         user_id = update.from_user.id       
-        return any([user_id == OWNER_ID, await db.admin_exist(user_id)])
+        res = any([user_id == OWNER_ID, await db.admin_exist(user_id)])
+        # logging.info(f"Admin check for {user_id}: {res} (Owner: {OWNER_ID})")
+        return res
     except Exception as e:
         print(f"! Exception in check_admin: {e}")
         return False
