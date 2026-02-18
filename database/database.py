@@ -3,7 +3,7 @@
 
 import time
 import pymongo, os
-import motor
+import motor.motor_asyncio
 from config import DB_URI, DB_NAME
 import logging
 from datetime import datetime, timedelta
