@@ -11,10 +11,7 @@ logging.basicConfig(level=logging.INFO)
 # Validate DB_URI
 if not DB_URI:
     logging.critical("DB_URI is missing in config! The bot cannot function without a database.")
-    # We don't exit here to allow the process to potentially log more info or be handled by bot.py
-    # but we set a dummy URI to avoid pymongo ConfigurationError if possible, or just let it fail later.
-    # Actually, it's better to provide a clear error message.
-    _db_uri = "mongodb://localhost:27017" # Fallback to local if not provided, just for initialization
+    _db_uri = "mongodb://localhost:27017" # Fallback to local if not provided
 else:
     _db_uri = DB_URI
 
@@ -146,7 +143,7 @@ class Rohit:
 
     async def set_verified_time(self, verified_time: int):
         try:
-            result = await self.settings_data.update_one(
+            await self.settings_data.update_one(
                 {"_id": "verified_time"},
                 {"$set": {"verified_time": verified_time}},
                 upsert=True
@@ -166,7 +163,7 @@ class Rohit:
 
     async def set_tut_video(self, video_url: str):
         try:
-            result = await self.settings_data.update_one(
+            await self.settings_data.update_one(
                 {"_id": "tutorial_video"},
                 {"$set": {"tutorial_video_url": video_url}},
                 upsert=True
@@ -195,8 +192,7 @@ class Rohit:
 
     async def full_userbase(self):
         user_docs = await self.user_data.find().to_list(length=None)
-        user_ids = [doc['_id'] for doc in user_docs]
-        return user_ids
+        return [doc['_id'] for doc in user_docs]
 
     async def del_user(self, user_id: int):
         await self.user_data.delete_one({'_id': user_id})
@@ -290,8 +286,13 @@ class Rohit:
         return data.get('value', False) if data else False
 
     # CHANNEL MANAGEMENT
+    async def channel_exist(self, channel_id: int):
+        found = await self.channel_data.find_one({'_id': channel_id})
+        return bool(found)
+
     async def add_channel(self, channel_id: int):
-        await self.channel_data.update_one({'_id': channel_id}, {'$set': {'_id': channel_id}}, upsert=True)
+        if not await self.channel_exist(channel_id):
+            await self.channel_data.insert_one({'_id': channel_id})
 
     async def del_channel(self, channel_id: int):
         await self.channel_data.delete_one({'_id': channel_id})
@@ -306,7 +307,8 @@ class Rohit:
         return bool(found)
 
     async def add_admin(self, admin_id: int):
-        await self.admins_data.update_one({'_id': admin_id}, {'$set': {'_id': admin_id}}, upsert=True)
+        if not await self.admin_exist(admin_id):
+            await self.admins_data.insert_one({'_id': admin_id})
 
     async def del_admin(self, admin_id: int):
         await self.admins_data.delete_one({'_id': admin_id})
@@ -322,7 +324,8 @@ class Rohit:
         return bool(found)
 
     async def add_ban_user(self, user_id: int):
-        await self.banned_user_data.update_one({'_id': user_id}, {'$set': {'_id': user_id}}, upsert=True)
+        if not await self.ban_user_exist(user_id):
+            await self.banned_user_data.insert_one({'_id': user_id})
 
     async def del_ban_user(self, user_id: int):
         await self.banned_user_data.delete_one({'_id': user_id})
@@ -355,6 +358,10 @@ class Rohit:
 
     async def del_reqChannel(self, channel_id: int):
         await self.rqst_fsub_Channel_data.delete_one({'_id': channel_id})
+
+    async def reqChannel_exist(self, channel_id: int):
+        found = await self.rqst_fsub_Channel_data.find_one({'_id': channel_id})
+        return bool(found)
 
     async def get_reqSent_user(self, channel_id: int):
         data = await self.rqst_fsub_Channel_data.find_one({'_id': channel_id})
