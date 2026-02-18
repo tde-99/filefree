@@ -1,46 +1,51 @@
-# Telegram Bot
-TG_BOT_TOKEN=8163907060:AAEbMLWLiLW-MgLlqrw041OdYvKP0TQXEkQ
-APP_ID=9698652
-API_HASH=b354710ab18b84e00b65c62ba7a9c043
-CHANNEL_ID=-1002568581749
-OWNER_ID=7678562257
-PORT=3435
+import os
+import logging
+from dotenv import load_dotenv
 
-# Database
-DATABASE_URL=mongodb+srv://obito:umaid2008@cluster0.engyc.mongodb.net/?retryWrites=true&w=majority
-DATABASE_NAME=orion
+load_dotenv()
 
-# Bot Settings
-MIN_ID=1
-MAX_ID=150
-IS_VERIFY=false
-TUT_VID=https://t.me/delight_link/2
-TG_BOT_WORKERS=200
+# --- Required Variables --- #
+API_HASH = os.environ.get("API_HASH", "")
+APP_ID = int(os.environ.get("APP_ID", "0"))
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")
+DB_URI = os.environ.get("DB_URI", "")
+DB_NAME = os.environ.get("DB_NAME", "BotDB")
+OWNER_ID = int(os.environ.get("OWNER_ID", "0"))
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "0"))
 
-# Images
-START_PIC=https://telegra.ph/file/ec17880d61180d3312d6a.jpg
-FORCE_PIC=https://telegra.ph/file/e292b12890b8b4b9dcbd1.jpg
-QR_PIC=https://envs.sh/B7w.png
-PICS=https://envs.sh/4Iq.jpg https://envs.sh/4IW.jpg https://envs.sh/4IB.jpg https://envs.sh/4In.jpg
+# --- Optional Variables --- #
+PORT = int(os.environ.get("PORT", "8080"))
+TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "4"))
 
-# Caption
-CUSTOM_CAPTION=<b>ʙʏ @Javpostr</b>
-DISABLE_CHANNEL_BUTTON=True
+# --- Pics and Videos --- #
+PICS = os.environ.get("PICS", "https://telegra.ph/file/5593d624d11d92bceb48e.jpg").split()
+START_PIC = os.environ.get("START_PIC", "https://telegra.ph/file/5593d624d11d92bceb48e.jpg")
+FORCE_PIC = os.environ.get("FORCE_PIC", "https://telegra.ph/file/0d9e590f62b63b51d4bf9.jpg")
+QR_PIC = os.environ.get("QR_PIC", "https://telegra.ph/file/5593d624d11d92bceb48e.jpg")
+TUT_VID = os.environ.get("TUT_VID", "")
 
-# Premium
-OWNER_TAG=rohit_1888
-UPI_ID=rohit23pnb@axl
-UPI_IMAGE_URL=https://t.me/paymentbot6/2
-SCREENSHOT_URL=t.me/rohit_1888
-PRICE1=0 rs
-PRICE2=60 rs
-PRICE3=150 rs
-PRICE4=280 rs
-PRICE5=550 rs
+# --- Pricing and UPI --- #
+PRICE1 = os.environ.get("PRICE1", "50 INR")
+PRICE2 = os.environ.get("PRICE2", "100 INR")
+PRICE3 = os.environ.get("PRICE3", "250 INR")
+PRICE4 = os.environ.get("PRICE4", "450 INR")
+PRICE5 = os.environ.get("PRICE5", "800 INR")
+UPI_ID = os.environ.get("UPI_ID", "")
+SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", "")
 
-# Referral
-REFERRAL_COUNT=5
-REFERRAL_PREMIUM_DAYS=7
+# --- Referral System --- #
+REFERRAL_COUNT = int(os.environ.get("REFERRAL_COUNT", "10"))
+REFERRAL_PREMIUM_DAYS = int(os.environ.get("REFERRAL_PREMIUM_DAYS", "7"))
 
-# User Reply
-USER_REPLY_TEXT=⚠️ Pʟᴇᴀsᴇ ᴜsᴇ ᴛʜᴇ ᴘʀᴏᴘᴇʀ ᴄᴏᴍᴍᴀɴᴅs ᴏʀ ʙᴜᴛᴛᴏɴs ᴛᴏ ɪɴᴛᴇʀᴀᴄᴛ ᴡɪᴛʜ ᴛʜᴇ ʙᴏᴛ.\n\nUse /help to see available commands.
+# --- Other Settings --- #
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>{file_name}</b>")
+MIN_ID = int(os.environ.get("MIN_ID", "1"))
+MAX_ID = int(os.environ.get("MAX_ID", "1000"))
+VIDEOS_RANGE = range(MIN_ID, MAX_ID + 1)
+
+# --- Logging --- #
+logging.basicConfig(
+    format='%(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+LOGGER = logging.getLogger

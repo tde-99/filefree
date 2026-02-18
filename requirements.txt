@@ -3,7 +3,7 @@ pyrofork==2.3.45
 TgCrypto
 pyromod==1.5
 schedule
-APscheduler
+apscheduler
 # --- For-Database ------------ #
 pymongo
 motor
@@ -11,15 +11,14 @@ dnspython
 # --- For-Web-Response ------- #
 aiohttp
 python-dotenv
-# --- For-Web-Response ------- #
+# --- For-Helpers ------------ #
 pytz
 requests
-bs4
+beautifulsoup4
 shortzy
 aiofiles
-asyncio
+humanize
 # --- For-Terabox-Download ------- #
-tgcrypto
 uvloop==0.21.0
 aria2p
 gunicorn
